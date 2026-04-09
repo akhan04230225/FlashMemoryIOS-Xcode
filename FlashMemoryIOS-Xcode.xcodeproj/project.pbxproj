@@ -10,9 +10,22 @@
 		3A4FA7342F87FE8100D00E7C /* FlashMemoryIOS-Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FlashMemoryIOS-Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7F91AB1C4D0E44C0A1B2C3D4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Assets.xcassets",
+			);
+			target = 3A4FA7332F87FE8100D00E7C /* FlashMemoryIOS-Xcode */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3A4FA7362F87FE8100D00E7C /* FlashMemoryIOS-Xcode */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7F91AB1C4D0E44C0A1B2C3D4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
 			path = "FlashMemoryIOS-Xcode";
 			sourceTree = "<group>";
 		};
