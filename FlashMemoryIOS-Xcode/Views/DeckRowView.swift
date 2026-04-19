@@ -18,6 +18,6 @@ struct DeckRowView: View {
 
 #Preview {
     List {
-        DeckRowView(deck: Deck(title: "Biology", cardCount: 12))
+        DeckRowView(deck: Deck.sampleDecks[0])
     }
 }
