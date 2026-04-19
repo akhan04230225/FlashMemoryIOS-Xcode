@@ -1,0 +1,254 @@
+import Combine
+import Foundation
+import SwiftUI
+
+class DeckBuilderViewModel: ObservableObject {
+    @Published var deckDraft: DeckDraft
+    @Published var currentCardDraft: FlashcardDraft {
+        didSet {
+            hasUnsavedCardDraft = currentCardDraft.hasContent
+        }
+    }
+    @Published var validationMessage: String?
+    @Published var hasUnsavedCardDraft: Bool
+
+    init(
+        deckDraft: DeckDraft = DeckDraft(),
+        currentCardDraft: FlashcardDraft = FlashcardDraft(),
+        validationMessage: String? = nil,
+        hasUnsavedCardDraft: Bool = false
+    ) {
+        self.deckDraft = deckDraft
+        self.currentCardDraft = currentCardDraft
+        self.validationMessage = validationMessage
+        self.hasUnsavedCardDraft = hasUnsavedCardDraft
+    }
+
+    func resetForNewDeck(deckType: DeckType) {
+        deckDraft = DeckDraft(deckType: deckType)
+        validationMessage = nil
+        resetCurrentCardDraft()
+    }
+
+    func updateDeckType(_ type: DeckType) {
+        deckDraft.deckType = type
+
+        if type == .lineMemorization {
+            updateLineOrderForCards()
+        }
+    }
+
+    func addCurrentCard() {
+        if let cardError = validateCurrentCardDraft() {
+            validationMessage = cardError
+            return
+        }
+
+        var card = currentCardDraft.toFlashcard()
+
+        if deckDraft.deckType == .lineMemorization {
+            card.lineOrder = card.lineOrder ?? deckDraft.cards.count + 1
+            insertLineMemorizationCard(card)
+            updateLineOrderForCards()
+        } else {
+            deckDraft.cards.append(card)
+        }
+
+        validationMessage = nil
+        resetCurrentCardDraft()
+    }
+
+    func removeCard(at offsets: IndexSet) {
+        deckDraft.cards.remove(atOffsets: offsets)
+        updateLineOrderForCards()
+    }
+
+    func deleteCard(id: UUID) {
+        deckDraft.cards.removeAll { $0.id == id }
+        updateLineOrderForCards()
+    }
+
+    func moveCard(from source: IndexSet, to destination: Int) {
+        deckDraft.cards.move(fromOffsets: source, toOffset: destination)
+        updateLineOrderForCards()
+    }
+
+    func resetCurrentCardDraft() {
+        currentCardDraft = FlashcardDraft(
+            frontLanguage: deckDraft.frontLanguage,
+            backLanguage: deckDraft.backLanguage
+        )
+        hasUnsavedCardDraft = false
+    }
+
+    func loadDeckForEditing(_ deck: Deck) {
+        deckDraft = DeckDraft(
+            title: deck.title,
+            deckDescription: deck.deckDescription,
+            category: deck.category ?? "",
+            deckType: deck.deckType,
+            frontLanguage: deck.frontLanguage,
+            backLanguage: deck.backLanguage,
+            cards: deck.cards
+        )
+
+        validationMessage = nil
+        resetCurrentCardDraft()
+    }
+
+    func buildDeck() -> Deck? {
+        if let saveError = DeckValidationService.validateDeckCanSave(
+            title: deckDraft.title,
+            cardCount: deckDraft.cards.count
+        ) {
+            validationMessage = saveError
+            return nil
+        }
+
+        validationMessage = nil
+
+        return Deck(
+            title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
+            deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: deckDraft.category.nilIfBlank,
+            deckType: deckDraft.deckType,
+            frontLanguage: deckDraft.frontLanguage,
+            backLanguage: deckDraft.backLanguage,
+            cards: orderedCardsForSaving()
+        )
+    }
+
+    func canSaveDeck() -> Bool {
+        DeckValidationService.validateDeckCanSave(
+            title: deckDraft.title,
+            cardCount: deckDraft.cards.count
+        ) == nil
+    }
+
+    func saveDeck(using store: DeckStore) {
+        guard canSaveDeck() else {
+            validationMessage = DeckValidationService.validateDeckCanSave(
+                title: deckDraft.title,
+                cardCount: deckDraft.cards.count
+            )
+            return
+        }
+
+        store.addDeck(from: deckDraftForSaving())
+        validationMessage = nil
+    }
+
+    func updateExistingDeck(using store: DeckStore, originalDeckId: UUID) {
+        guard canSaveDeck() else {
+            validationMessage = DeckValidationService.validateDeckCanSave(
+                title: deckDraft.title,
+                cardCount: deckDraft.cards.count
+            )
+            return
+        }
+
+        let originalDeck = store.deck(with: originalDeckId)
+
+        let updatedDeck = Deck(
+            id: originalDeckId,
+            title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
+            deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: deckDraft.category.nilIfBlank,
+            deckType: deckDraft.deckType,
+            frontLanguage: deckDraft.frontLanguage,
+            backLanguage: deckDraft.backLanguage,
+            cards: orderedCardsForSaving(),
+            createdAt: originalDeck?.createdAt ?? Date(),
+            updatedAt: Date()
+        )
+
+        store.updateDeck(updatedDeck)
+        validationMessage = nil
+    }
+
+    private func validateCurrentCardDraft() -> String? {
+        let frontText = currentCardDraft.frontText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let backText = currentCardDraft.backText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if deckDraft.deckType == .lineMemorization {
+            if frontText.isEmpty {
+                return "Card front text is required."
+            }
+
+            return nil
+        }
+
+        return DeckValidationService.validateCard(frontText: frontText, backText: backText)
+    }
+
+    private func insertLineMemorizationCard(_ card: Flashcard) {
+        guard let lineOrder = card.lineOrder else {
+            deckDraft.cards.append(card)
+            return
+        }
+
+        let insertIndex = max(0, min(lineOrder - 1, deckDraft.cards.count))
+        deckDraft.cards.insert(card, at: insertIndex)
+    }
+
+    private func updateLineOrderForCards() {
+        guard deckDraft.deckType == .lineMemorization else {
+            return
+        }
+
+        for cardIndex in deckDraft.cards.indices {
+            deckDraft.cards[cardIndex].lineOrder = cardIndex + 1
+        }
+    }
+
+    private func orderedCardsForSaving() -> [Flashcard] {
+        if deckDraft.deckType == .lineMemorization {
+            return deckDraft.cards.enumerated().map { index, card in
+                var updatedCard = card
+                updatedCard.lineOrder = index + 1
+                return updatedCard
+            }
+        }
+
+        return deckDraft.cards
+    }
+
+    private func deckDraftForSaving() -> DeckDraft {
+        DeckDraft(
+            title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
+            deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: deckDraft.category.trimmingCharacters(in: .whitespacesAndNewlines),
+            deckType: deckDraft.deckType,
+            frontLanguage: deckDraft.frontLanguage,
+            backLanguage: deckDraft.backLanguage,
+            cards: orderedCardsForSaving()
+        )
+    }
+}
+
+private extension FlashcardDraft {
+    var hasContent: Bool {
+        [
+            frontText,
+            backText,
+            transliteration,
+            category,
+            hintText,
+            fillBlankText,
+            notes,
+            imageName,
+            matchPrompt,
+            matchAnswer,
+            sourceReference,
+            lineOrder,
+            memorizationChunksText
+        ].contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? {
+        let trimmedText = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedText.isEmpty ? nil : trimmedText
+    }
+}
