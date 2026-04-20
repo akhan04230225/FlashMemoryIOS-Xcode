@@ -209,15 +209,11 @@ class DeckBuilderViewModel: ObservableObject {
         let frontText = currentCardDraft.frontText.trimmingCharacters(in: .whitespacesAndNewlines)
         let backText = currentCardDraft.backText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if deckDraft.deckType == .lineMemorization {
-            if frontText.isEmpty {
-                return "Card front text is required."
-            }
-
-            return nil
-        }
-
-        return DeckValidationService.validateCard(frontText: frontText, backText: backText)
+        return DeckValidationService.validateCard(
+            frontText: frontText,
+            backText: backText,
+            deckType: deckDraft.deckType
+        )
     }
 
     private func insertLineMemorizationCard(_ card: Flashcard) {

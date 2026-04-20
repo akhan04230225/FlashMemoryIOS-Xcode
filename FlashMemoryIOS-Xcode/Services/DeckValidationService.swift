@@ -10,11 +10,15 @@ struct DeckValidationService {
     }
 
     static func validateCard(frontText: String, backText: String) -> String? {
+        validateCard(frontText: frontText, backText: backText, deckType: .standard)
+    }
+
+    static func validateCard(frontText: String, backText: String, deckType: DeckType) -> String? {
         if frontText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "Card front text is required."
         }
 
-        if backText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if deckType.requiresBackText && backText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "Card back text is required."
         }
 
@@ -31,5 +35,16 @@ struct DeckValidationService {
         }
 
         return nil
+    }
+}
+
+private extension DeckType {
+    var requiresBackText: Bool {
+        switch self {
+        case .standard, .mixed:
+            return true
+        case .lineMemorization:
+            return false
+        }
     }
 }
