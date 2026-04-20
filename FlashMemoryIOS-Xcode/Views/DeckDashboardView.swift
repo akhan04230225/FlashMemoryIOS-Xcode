@@ -31,7 +31,10 @@ struct DeckDashboardView: View {
                         NavigationLink {
                             DeckDetailEditView(deck: deck)
                         } label: {
-                            DeckDashboardRow(deck: deck)
+                            DeckSummaryCardView(
+                                deck: deck,
+                                showsDisclosureIndicator: true
+                            )
                         }
                         .buttonStyle(.plain)
                     }
@@ -77,50 +80,20 @@ struct DeckDashboardView: View {
     }
 }
 
-private struct DeckDashboardRow: View {
-    let deck: Deck
-
-    var body: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(deck.title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-
-                Text(deck.deckType.displayName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("\(deck.cardCount)")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-
-                Text(deck.cardCount == 1 ? "card" : "cards")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.tertiary)
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
 private struct DeckDetailEditView: View {
     let deck: Deck
 
     var body: some View {
         List {
+            Section {
+                DeckSummaryCardView(
+                    deck: deck,
+                    displayStyle: .detailed
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
             Section("Deck") {
                 LabeledContent("Title", value: deck.title)
                 LabeledContent("Type", value: deck.deckType.displayName)
