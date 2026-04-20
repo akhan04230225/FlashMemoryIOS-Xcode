@@ -11,10 +11,10 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7F91AB1C4D0E44C0A1B2C3D4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		7F91AB1C4D0E44C0A1B2C3D4 /* Exceptions for "FlashMemoryIOS-Xcode" folder in "FlashMemoryIOS-Xcode" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"Assets.xcassets",
+				Assets.xcassets,
 			);
 			target = 3A4FA7332F87FE8100D00E7C /* FlashMemoryIOS-Xcode */;
 		};
@@ -24,7 +24,7 @@
 		3A4FA7362F87FE8100D00E7C /* FlashMemoryIOS-Xcode */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				7F91AB1C4D0E44C0A1B2C3D4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				7F91AB1C4D0E44C0A1B2C3D4 /* Exceptions for "FlashMemoryIOS-Xcode" folder in "FlashMemoryIOS-Xcode" target */,
 			);
 			path = "FlashMemoryIOS-Xcode";
 			sourceTree = "<group>";
