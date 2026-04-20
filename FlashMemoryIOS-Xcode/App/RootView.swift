@@ -11,7 +11,7 @@ struct RootView: View {
             }
 
             NavigationStack {
-                DeckListView()
+                DeckDashboardView()
             }
             .tabItem {
                 Label("Decks", systemImage: "square.stack")
@@ -36,4 +36,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
+        .environmentObject(DeckStore())
 }
