@@ -11,21 +11,33 @@ class DeckBuilderViewModel: ObservableObject {
     }
     @Published var validationMessage: String?
     @Published var hasUnsavedCardDraft: Bool
+    @Published private(set) var editingDeckId: UUID?
+
+    private var editingDeckCreatedAt: Date?
+
+    var isEditingExistingDeck: Bool {
+        editingDeckId != nil
+    }
 
     init(
         deckDraft: DeckDraft = DeckDraft(),
         currentCardDraft: FlashcardDraft = FlashcardDraft(),
         validationMessage: String? = nil,
-        hasUnsavedCardDraft: Bool = false
+        hasUnsavedCardDraft: Bool? = nil,
+        editingDeckId: UUID? = nil
     ) {
         self.deckDraft = deckDraft
         self.currentCardDraft = currentCardDraft
         self.validationMessage = validationMessage
-        self.hasUnsavedCardDraft = hasUnsavedCardDraft
+        self.hasUnsavedCardDraft = hasUnsavedCardDraft ?? currentCardDraft.hasContent
+        self.editingDeckId = editingDeckId
+        self.editingDeckCreatedAt = nil
     }
 
     func resetForNewDeck(deckType: DeckType) {
         deckDraft = DeckDraft(deckType: deckType)
+        editingDeckId = nil
+        editingDeckCreatedAt = nil
         validationMessage = nil
         resetCurrentCardDraft()
     }
@@ -36,6 +48,8 @@ class DeckBuilderViewModel: ObservableObject {
         if type == .lineMemorization {
             updateLineOrderForCards()
         }
+
+        validationMessage = nil
     }
 
     func addCurrentCard() {
@@ -89,14 +103,21 @@ class DeckBuilderViewModel: ObservableObject {
             deckType: deck.deckType,
             frontLanguage: deck.frontLanguage,
             backLanguage: deck.backLanguage,
-            cards: deck.cards
+            cards: cardsForEditing(deck.cards, deckType: deck.deckType)
         )
 
+        editingDeckId = deck.id
+        editingDeckCreatedAt = deck.createdAt
         validationMessage = nil
         resetCurrentCardDraft()
+        updateLineOrderForCards()
     }
 
     func buildDeck() -> Deck? {
+        buildDeck(id: editingDeckId)
+    }
+
+    func buildDeck(id: UUID?) -> Deck? {
         if let saveError = DeckValidationService.validateDeckCanSave(
             title: deckDraft.title,
             cardCount: deckDraft.cards.count
@@ -108,13 +129,16 @@ class DeckBuilderViewModel: ObservableObject {
         validationMessage = nil
 
         return Deck(
+            id: id ?? UUID(),
             title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
             deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
             category: deckDraft.category.nilIfBlank,
             deckType: deckDraft.deckType,
             frontLanguage: deckDraft.frontLanguage,
             backLanguage: deckDraft.backLanguage,
-            cards: orderedCardsForSaving()
+            cards: orderedCardsForSaving(),
+            createdAt: createdAtForBuiltDeck(id: id),
+            updatedAt: Date()
         )
     }
 
@@ -125,26 +149,30 @@ class DeckBuilderViewModel: ObservableObject {
         ) == nil
     }
 
-    func saveDeck(using store: DeckStore) {
+    @discardableResult
+    func saveDeck(using store: DeckStore) -> Bool {
         guard canSaveDeck() else {
             validationMessage = DeckValidationService.validateDeckCanSave(
                 title: deckDraft.title,
                 cardCount: deckDraft.cards.count
             )
-            return
+            return false
         }
 
         store.addDeck(from: deckDraftForSaving())
         validationMessage = nil
+        editingDeckId = nil
+        return true
     }
 
-    func updateExistingDeck(using store: DeckStore, originalDeckId: UUID) {
+    @discardableResult
+    func updateExistingDeck(using store: DeckStore, originalDeckId: UUID) -> Bool {
         guard canSaveDeck() else {
             validationMessage = DeckValidationService.validateDeckCanSave(
                 title: deckDraft.title,
                 cardCount: deckDraft.cards.count
             )
-            return
+            return false
         }
 
         let originalDeck = store.deck(with: originalDeckId)
@@ -164,6 +192,17 @@ class DeckBuilderViewModel: ObservableObject {
 
         store.updateDeck(updatedDeck)
         validationMessage = nil
+        editingDeckId = originalDeckId
+        return true
+    }
+
+    @discardableResult
+    func saveOrUpdateDeck(using store: DeckStore) -> Bool {
+        if let editingDeckId {
+            return updateExistingDeck(using: store, originalDeckId: editingDeckId)
+        }
+
+        return saveDeck(using: store)
     }
 
     private func validateCurrentCardDraft() -> String? {
@@ -223,6 +262,26 @@ class DeckBuilderViewModel: ObservableObject {
             backLanguage: deckDraft.backLanguage,
             cards: orderedCardsForSaving()
         )
+    }
+
+    private func cardsForEditing(_ cards: [Flashcard], deckType: DeckType) -> [Flashcard] {
+        guard deckType == .lineMemorization else {
+            return cards
+        }
+
+        return cards.sorted { firstCard, secondCard in
+            let firstOrder = firstCard.lineOrder ?? Int.max
+            let secondOrder = secondCard.lineOrder ?? Int.max
+            return firstOrder < secondOrder
+        }
+    }
+
+    private func createdAtForBuiltDeck(id: UUID?) -> Date {
+        if id == editingDeckId, let editingDeckCreatedAt {
+            return editingDeckCreatedAt
+        }
+
+        return Date()
     }
 }
 
