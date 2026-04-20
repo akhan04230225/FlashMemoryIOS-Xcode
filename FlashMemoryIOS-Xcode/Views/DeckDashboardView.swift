@@ -5,12 +5,11 @@ struct DeckDashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    deckListSection
-                    createDeckSection
-                }
-                .padding()
+            VStack(spacing: 0) {
+                deckListSection
+                    .frame(maxHeight: .infinity)
+
+                createDeckSection
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Decks")
@@ -18,28 +17,31 @@ struct DeckDashboardView: View {
     }
 
     private var deckListSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Your Decks")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Your Decks")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
 
-            if deckStore.decks.isEmpty {
-                emptyDeckState
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(deckStore.decks) { deck in
-                        NavigationLink {
-                            DeckDetailEditView(deck: deck)
-                        } label: {
-                            DeckSummaryCardView(
-                                deck: deck,
-                                showsDisclosureIndicator: true
-                            )
+                if deckStore.decks.isEmpty {
+                    emptyDeckState
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(deckStore.decks) { deck in
+                            NavigationLink {
+                                DeckDetailEditView(deck: deck)
+                            } label: {
+                                DeckSummaryCardView(
+                                    deck: deck,
+                                    showsDisclosureIndicator: true
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
+            .padding()
         }
     }
 
@@ -77,6 +79,8 @@ struct DeckDashboardView: View {
             }
             .buttonStyle(.plain)
         }
+        .padding()
+        .background(Color(.systemGroupedBackground))
     }
 }
 
