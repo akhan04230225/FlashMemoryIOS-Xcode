@@ -156,26 +156,6 @@ private struct DeckDetailEditView: View {
     }
 }
 
-struct DeckTypeSelectionView: View {
-    var body: some View {
-        List {
-            ForEach([DeckType.standard, .lineMemorization, .mixed], id: \.self) { deckType in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(deckType.displayName)
-                        .font(.headline)
-
-                    Text(deckType.shortDescription)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 6)
-            }
-        }
-        .navigationTitle("Choose Deck Type")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 #Preview {
     DeckDashboardView()
         .environmentObject(DeckStore())
