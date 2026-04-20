@@ -73,17 +73,6 @@ private struct DeckTypeSelectionCard: View {
     }
 }
 
-struct StandardDeckBuilderView: View {
-    var body: some View {
-        Text("Standard deck builder coming soon.")
-            .font(.headline)
-            .foregroundStyle(.secondary)
-            .padding()
-            .navigationTitle("Standard Deck")
-            .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 struct LineMemorizationDeckBuilderView: View {
     var body: some View {
         Text("Line memorization deck builder coming soon.")
