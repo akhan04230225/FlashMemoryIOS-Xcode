@@ -58,7 +58,7 @@ class DeckBuilderViewModel: ObservableObject {
             return
         }
 
-        var card = currentCardDraft.toFlashcard()
+        var card = currentCardDraft
 
         if deckDraft.deckType == .lineMemorization {
             card.lineOrder = card.lineOrder ?? deckDraft.cards.count + 1
@@ -99,11 +99,11 @@ class DeckBuilderViewModel: ObservableObject {
         deckDraft = DeckDraft(
             title: deck.title,
             deckDescription: deck.deckDescription,
-            category: deck.category ?? "",
+            category: deck.category,
             deckType: deck.deckType,
             frontLanguage: deck.frontLanguage,
             backLanguage: deck.backLanguage,
-            cards: cardsForEditing(deck.cards, deckType: deck.deckType)
+            cards: cardsForEditing(deck.cards.map(FlashcardDraft.init(flashcard:)), deckType: deck.deckType)
         )
 
         editingDeckId = deck.id
@@ -128,15 +128,8 @@ class DeckBuilderViewModel: ObservableObject {
 
         validationMessage = nil
 
-        return Deck(
+        return deckDraftForSaving().toDeck(
             id: id ?? UUID(),
-            title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: deckDraft.category.nilIfBlank,
-            deckType: deckDraft.deckType,
-            frontLanguage: deckDraft.frontLanguage,
-            backLanguage: deckDraft.backLanguage,
-            cards: orderedCardsForSaving(),
             createdAt: createdAtForBuiltDeck(id: id),
             updatedAt: Date()
         )
@@ -177,15 +170,8 @@ class DeckBuilderViewModel: ObservableObject {
 
         let originalDeck = store.deck(with: originalDeckId)
 
-        let updatedDeck = Deck(
+        let updatedDeck = deckDraftForSaving().toDeck(
             id: originalDeckId,
-            title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: deckDraft.category.nilIfBlank,
-            deckType: deckDraft.deckType,
-            frontLanguage: deckDraft.frontLanguage,
-            backLanguage: deckDraft.backLanguage,
-            cards: orderedCardsForSaving(),
             createdAt: originalDeck?.createdAt ?? Date(),
             updatedAt: Date()
         )
@@ -216,7 +202,7 @@ class DeckBuilderViewModel: ObservableObject {
         )
     }
 
-    private func insertLineMemorizationCard(_ card: Flashcard) {
+    private func insertLineMemorizationCard(_ card: FlashcardDraft) {
         guard let lineOrder = card.lineOrder else {
             deckDraft.cards.append(card)
             return
@@ -236,7 +222,7 @@ class DeckBuilderViewModel: ObservableObject {
         }
     }
 
-    private func orderedCardsForSaving() -> [Flashcard] {
+    private func orderedCardsForSaving() -> [FlashcardDraft] {
         if deckDraft.deckType == .lineMemorization {
             return deckDraft.cards.enumerated().map { index, card in
                 var updatedCard = card
@@ -252,7 +238,7 @@ class DeckBuilderViewModel: ObservableObject {
         DeckDraft(
             title: deckDraft.title.trimmingCharacters(in: .whitespacesAndNewlines),
             deckDescription: deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: deckDraft.category.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: deckDraft.category?.trimmingCharacters(in: .whitespacesAndNewlines),
             deckType: deckDraft.deckType,
             frontLanguage: deckDraft.frontLanguage,
             backLanguage: deckDraft.backLanguage,
@@ -260,7 +246,7 @@ class DeckBuilderViewModel: ObservableObject {
         )
     }
 
-    private func cardsForEditing(_ cards: [Flashcard], deckType: DeckType) -> [Flashcard] {
+    private func cardsForEditing(_ cards: [FlashcardDraft], deckType: DeckType) -> [FlashcardDraft] {
         guard deckType == .lineMemorization else {
             return cards
         }
@@ -278,32 +264,5 @@ class DeckBuilderViewModel: ObservableObject {
         }
 
         return Date()
-    }
-}
-
-private extension FlashcardDraft {
-    var hasContent: Bool {
-        [
-            frontText,
-            backText,
-            transliteration,
-            category,
-            hintText,
-            fillBlankText,
-            notes,
-            imageName,
-            matchPrompt,
-            matchAnswer,
-            sourceReference,
-            lineOrder,
-            memorizationChunksText
-        ].contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    }
-}
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmedText = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedText.isEmpty ? nil : trimmedText
     }
 }

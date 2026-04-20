@@ -11,15 +11,7 @@ class DeckStore: ObservableObject {
 
     @discardableResult
     func addDeck(from draft: DeckDraft) -> Deck {
-        let newDeck = Deck(
-            title: draft.title.trimmingCharacters(in: .whitespacesAndNewlines),
-            deckDescription: draft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: draft.category.nilIfBlank,
-            deckType: draft.deckType,
-            frontLanguage: draft.frontLanguage,
-            backLanguage: draft.backLanguage,
-            cards: draft.cards
-        )
+        let newDeck = draft.toDeck()
 
         decks.append(newDeck)
         return newDeck
@@ -155,12 +147,5 @@ class DeckStore: ObservableObject {
                 memorizationChunks: card.memorizationChunks
             )
         }
-    }
-}
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmedText = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedText.isEmpty ? nil : trimmedText
     }
 }

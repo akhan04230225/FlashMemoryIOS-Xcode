@@ -1,39 +1,42 @@
 import Foundation
 
-struct FlashcardDraft {
+struct FlashcardDraft: Identifiable, Hashable {
+    let id: UUID
     var frontText: String
     var backText: String
     var frontLanguage: AppLanguage
     var backLanguage: AppLanguage
-    var transliteration: String
-    var category: String
-    var hintText: String
-    var fillBlankText: String
-    var notes: String
-    var imageName: String
-    var matchPrompt: String
-    var matchAnswer: String
-    var sourceReference: String
-    var lineOrder: String
-    var memorizationChunksText: String
+    var transliteration: String?
+    var category: String?
+    var hintText: String?
+    var fillBlankText: String?
+    var notes: String?
+    var imageName: String?
+    var matchPrompt: String?
+    var matchAnswer: String?
+    var sourceReference: String?
+    var lineOrder: Int?
+    var memorizationChunks: [String]
 
-    init(
+    nonisolated init(
+        id: UUID = UUID(),
         frontText: String = "",
         backText: String = "",
         frontLanguage: AppLanguage = .english,
         backLanguage: AppLanguage = .english,
-        transliteration: String = "",
-        category: String = "",
-        hintText: String = "",
-        fillBlankText: String = "",
-        notes: String = "",
-        imageName: String = "",
-        matchPrompt: String = "",
-        matchAnswer: String = "",
-        sourceReference: String = "",
-        lineOrder: String = "",
-        memorizationChunksText: String = ""
+        transliteration: String? = nil,
+        category: String? = nil,
+        hintText: String? = nil,
+        fillBlankText: String? = nil,
+        notes: String? = nil,
+        imageName: String? = nil,
+        matchPrompt: String? = nil,
+        matchAnswer: String? = nil,
+        sourceReference: String? = nil,
+        lineOrder: Int? = nil,
+        memorizationChunks: [String] = []
     ) {
+        self.id = id
         self.frontText = frontText
         self.backText = backText
         self.frontLanguage = frontLanguage
@@ -48,34 +51,69 @@ struct FlashcardDraft {
         self.matchAnswer = matchAnswer
         self.sourceReference = sourceReference
         self.lineOrder = lineOrder
-        self.memorizationChunksText = memorizationChunksText
+        self.memorizationChunks = memorizationChunks
+    }
+
+    nonisolated init(flashcard: Flashcard) {
+        self.init(
+            id: flashcard.id,
+            frontText: flashcard.frontText,
+            backText: flashcard.backText,
+            frontLanguage: flashcard.frontLanguage,
+            backLanguage: flashcard.backLanguage,
+            transliteration: flashcard.transliteration,
+            category: flashcard.category,
+            hintText: flashcard.hintText,
+            fillBlankText: flashcard.fillBlankText,
+            notes: flashcard.notes,
+            imageName: flashcard.imageName,
+            matchPrompt: flashcard.matchPrompt,
+            matchAnswer: flashcard.matchAnswer,
+            sourceReference: flashcard.sourceReference,
+            lineOrder: flashcard.lineOrder,
+            memorizationChunks: flashcard.memorizationChunks
+        )
+    }
+
+    var hasContent: Bool {
+        [
+            frontText,
+            backText,
+            transliteration ?? "",
+            category ?? "",
+            hintText ?? "",
+            fillBlankText ?? "",
+            notes ?? "",
+            imageName ?? "",
+            matchPrompt ?? "",
+            matchAnswer ?? "",
+            sourceReference ?? "",
+            lineOrder.map(String.init) ?? "",
+            memorizationChunks.joined(separator: "\n")
+        ].contains { !$0.trimmed.isEmpty }
     }
 
     func toFlashcard() -> Flashcard {
         Flashcard(
+            id: id,
             frontText: frontText.trimmed,
             backText: backText.trimmed,
             frontLanguage: frontLanguage,
             backLanguage: backLanguage,
-            transliteration: transliteration.nilIfBlank,
-            category: category.nilIfBlank,
-            hintText: hintText.nilIfBlank,
-            fillBlankText: fillBlankText.nilIfBlank,
-            notes: notes.nilIfBlank,
-            imageName: imageName.nilIfBlank,
-            matchPrompt: matchPrompt.nilIfBlank,
-            matchAnswer: matchAnswer.nilIfBlank,
-            sourceReference: sourceReference.nilIfBlank,
-            lineOrder: Int(lineOrder.trimmed),
+            transliteration: transliteration?.nilIfBlank,
+            category: category?.nilIfBlank,
+            hintText: hintText?.nilIfBlank,
+            fillBlankText: fillBlankText?.nilIfBlank,
+            notes: notes?.nilIfBlank,
+            imageName: imageName?.nilIfBlank,
+            matchPrompt: matchPrompt?.nilIfBlank,
+            matchAnswer: matchAnswer?.nilIfBlank,
+            sourceReference: sourceReference?.nilIfBlank,
+            lineOrder: lineOrder,
             memorizationChunks: memorizationChunks
+                .map { $0.trimmed }
+                .filter { !$0.isEmpty }
         )
-    }
-
-    private var memorizationChunks: [String] {
-        memorizationChunksText
-            .components(separatedBy: .newlines)
-            .map { $0.trimmed }
-            .filter { !$0.isEmpty }
     }
 }
 
