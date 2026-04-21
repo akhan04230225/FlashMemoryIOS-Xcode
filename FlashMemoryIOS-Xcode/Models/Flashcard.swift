@@ -12,6 +12,8 @@ struct Flashcard: Identifiable, Codable, Hashable {
     var fillBlankText: String?
     var notes: String?
     var imageName: String?
+    var frontImageName: String?
+    var backImageName: String?
     var matchPrompt: String?
     var matchAnswer: String?
     var sourceReference: String?
@@ -30,6 +32,8 @@ struct Flashcard: Identifiable, Codable, Hashable {
         fillBlankText: String? = nil,
         notes: String? = nil,
         imageName: String? = nil,
+        frontImageName: String? = nil,
+        backImageName: String? = nil,
         matchPrompt: String? = nil,
         matchAnswer: String? = nil,
         sourceReference: String? = nil,
@@ -47,6 +51,8 @@ struct Flashcard: Identifiable, Codable, Hashable {
         self.fillBlankText = fillBlankText
         self.notes = notes
         self.imageName = imageName
+        self.frontImageName = frontImageName
+        self.backImageName = backImageName
         self.matchPrompt = matchPrompt
         self.matchAnswer = matchAnswer
         self.sourceReference = sourceReference

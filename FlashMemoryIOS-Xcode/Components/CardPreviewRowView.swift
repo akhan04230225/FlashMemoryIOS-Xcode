@@ -21,13 +21,19 @@ struct CardPreviewRowView: View {
                     .foregroundStyle(.secondary)
             }
 
-            cardText(
-                title: "Front",
-                text: card.frontText,
-                language: card.frontLanguage,
-                font: .headline,
-                color: .primary
-            )
+            if !card.frontText.trimmed.isEmpty {
+                cardText(
+                    title: "Front",
+                    text: card.frontText,
+                    language: card.frontLanguage,
+                    font: .headline,
+                    color: .primary
+                )
+            }
+
+            if hasText(card.frontImageName) {
+                imageIndicator("Front Image Attached")
+            }
 
             if !card.backText.trimmed.isEmpty {
                 cardText(
@@ -37,6 +43,10 @@ struct CardPreviewRowView: View {
                     font: .subheadline,
                     color: .secondary
                 )
+            }
+
+            if hasText(card.backImageName) {
+                imageIndicator("Back Image Attached")
             }
 
             if displayStyle == .detailed, let transliteration = card.transliteration?.trimmed, !transliteration.isEmpty {
@@ -57,6 +67,7 @@ struct CardPreviewRowView: View {
     private var hasMetadata: Bool {
         hasText(card.category)
             || hasText(card.sourceReference)
+            || hasText(card.imageName)
             || (displayStyle == .detailed && detailedMetadataItems.isEmpty == false)
     }
 
@@ -68,6 +79,10 @@ struct CardPreviewRowView: View {
 
             if let sourceReference = card.sourceReference?.trimmed, !sourceReference.isEmpty {
                 metadataText("Source: \(sourceReference)")
+            }
+
+            if let imageName = card.imageName?.trimmed, !imageName.isEmpty {
+                metadataText("Image: \(imageName)")
             }
 
             if displayStyle == .detailed {
@@ -135,6 +150,17 @@ struct CardPreviewRowView: View {
             .foregroundStyle(.secondary)
             .lineLimit(displayStyle == .compact ? 2 : nil)
             .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func imageIndicator(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .fontWeight(.medium)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color(.tertiarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

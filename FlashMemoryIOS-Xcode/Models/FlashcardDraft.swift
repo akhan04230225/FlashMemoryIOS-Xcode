@@ -12,6 +12,8 @@ struct FlashcardDraft: Identifiable, Hashable {
     var fillBlankText: String?
     var notes: String?
     var imageName: String?
+    var frontImageName: String?
+    var backImageName: String?
     var matchPrompt: String?
     var matchAnswer: String?
     var sourceReference: String?
@@ -30,6 +32,8 @@ struct FlashcardDraft: Identifiable, Hashable {
         fillBlankText: String? = nil,
         notes: String? = nil,
         imageName: String? = nil,
+        frontImageName: String? = nil,
+        backImageName: String? = nil,
         matchPrompt: String? = nil,
         matchAnswer: String? = nil,
         sourceReference: String? = nil,
@@ -47,6 +51,8 @@ struct FlashcardDraft: Identifiable, Hashable {
         self.fillBlankText = fillBlankText
         self.notes = notes
         self.imageName = imageName
+        self.frontImageName = frontImageName
+        self.backImageName = backImageName
         self.matchPrompt = matchPrompt
         self.matchAnswer = matchAnswer
         self.sourceReference = sourceReference
@@ -67,6 +73,8 @@ struct FlashcardDraft: Identifiable, Hashable {
             fillBlankText: flashcard.fillBlankText,
             notes: flashcard.notes,
             imageName: flashcard.imageName,
+            frontImageName: flashcard.frontImageName,
+            backImageName: flashcard.backImageName,
             matchPrompt: flashcard.matchPrompt,
             matchAnswer: flashcard.matchAnswer,
             sourceReference: flashcard.sourceReference,
@@ -85,6 +93,8 @@ struct FlashcardDraft: Identifiable, Hashable {
             fillBlankText ?? "",
             notes ?? "",
             imageName ?? "",
+            frontImageName ?? "",
+            backImageName ?? "",
             matchPrompt ?? "",
             matchAnswer ?? "",
             sourceReference ?? "",
@@ -106,6 +116,8 @@ struct FlashcardDraft: Identifiable, Hashable {
             fillBlankText: fillBlankText?.nilIfBlank,
             notes: notes?.nilIfBlank,
             imageName: imageName?.nilIfBlank,
+            frontImageName: frontImageName?.nilIfBlank,
+            backImageName: backImageName?.nilIfBlank,
             matchPrompt: matchPrompt?.nilIfBlank,
             matchAnswer: matchAnswer?.nilIfBlank,
             sourceReference: sourceReference?.nilIfBlank,

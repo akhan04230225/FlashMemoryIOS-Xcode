@@ -14,12 +14,33 @@ struct DeckValidationService {
     }
 
     static func validateCard(frontText: String, backText: String, deckType: DeckType) -> String? {
-        if frontText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Card front text is required."
+        validateCard(
+            frontText: frontText,
+            frontImageName: nil,
+            backText: backText,
+            backImageName: nil,
+            deckType: deckType
+        )
+    }
+
+    static func validateCard(
+        frontText: String,
+        frontImageName: String?,
+        backText: String,
+        backImageName: String?,
+        deckType: DeckType
+    ) -> String? {
+        let hasFrontText = !frontText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasFrontImage = !(frontImageName ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasBackText = !backText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasBackImage = !(backImageName ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        if !hasFrontText && !hasFrontImage {
+            return "Add front text or a front image."
         }
 
-        if deckType.requiresBackText && backText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Card back text is required."
+        if deckType.requiresBackContent && !hasBackText && !hasBackImage {
+            return "Add back text or a back image."
         }
 
         return nil
@@ -39,7 +60,7 @@ struct DeckValidationService {
 }
 
 private extension DeckType {
-    var requiresBackText: Bool {
+    var requiresBackContent: Bool {
         switch self {
         case .standard, .mixed:
             return true

@@ -197,7 +197,9 @@ class DeckBuilderViewModel: ObservableObject {
 
         return DeckValidationService.validateCard(
             frontText: frontText,
+            frontImageName: currentCardDraft.frontImageName,
             backText: backText,
+            backImageName: currentCardDraft.backImageName,
             deckType: deckDraft.deckType
         )
     }

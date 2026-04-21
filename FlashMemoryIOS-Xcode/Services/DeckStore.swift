@@ -140,6 +140,8 @@ class DeckStore: ObservableObject {
                 fillBlankText: card.fillBlankText,
                 notes: card.notes,
                 imageName: card.imageName,
+                frontImageName: card.frontImageName,
+                backImageName: card.backImageName,
                 matchPrompt: card.matchPrompt,
                 matchAnswer: card.matchAnswer,
                 sourceReference: card.sourceReference,

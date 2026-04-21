@@ -38,9 +38,21 @@ struct StandardDeckBuilderView: View {
     private var deckDetailsSection: some View {
         Section("Deck Details") {
             TextField("Title", text: $viewModel.deckDraft.title)
-            TextField("Description", text: $viewModel.deckDraft.deckDescription, axis: .vertical)
+                .keyboardType(.asciiCapable)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+
+            MultilineInputField(
+                "Description",
+                text: $viewModel.deckDraft.deckDescription,
+                language: .english
+            )
                 .lineLimit(3...5)
+
             TextField("Category", text: deckCategoryBinding)
+                .keyboardType(.asciiCapable)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
         }
     }
 
@@ -68,25 +80,98 @@ struct StandardDeckBuilderView: View {
 
     private var addCardSection: some View {
         Section("Add Card") {
-            TextField("Front Text", text: $viewModel.currentCardDraft.frontText, axis: .vertical)
-                .lineLimit(2...5)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Front")
+                    .font(.headline)
 
-            TextField("Back Text", text: $viewModel.currentCardDraft.backText, axis: .vertical)
-                .lineLimit(2...5)
+                MultilineInputField(
+                    "Front text",
+                    text: $viewModel.currentCardDraft.frontText,
+                    language: viewModel.deckDraft.frontLanguage
+                )
+                    .lineLimit(2...5)
+
+                TextField("Front image name or reference", text: cardTextBinding(\.frontImageName))
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+
+                Button("Add Front Image Later") {
+                    viewModel.currentCardDraft.frontImageName = viewModel.currentCardDraft.frontImageName ?? ""
+                }
+                .font(.footnote)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Back")
+                    .font(.headline)
+
+                MultilineInputField(
+                    "Back text",
+                    text: $viewModel.currentCardDraft.backText,
+                    language: viewModel.deckDraft.backLanguage
+                )
+                    .lineLimit(2...5)
+
+                TextField("Back image name or reference", text: cardTextBinding(\.backImageName))
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+
+                Button("Add Back Image Later") {
+                    viewModel.currentCardDraft.backImageName = viewModel.currentCardDraft.backImageName ?? ""
+                }
+                .font(.footnote)
+            }
 
             DisclosureGroup("Advanced Fields", isExpanded: $isAdvancedCardInfoExpanded) {
                 TextField("Transliteration", text: cardTextBinding(\.transliteration))
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+
                 TextField("Category", text: cardTextBinding(\.category))
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+
                 TextField("Hint", text: cardTextBinding(\.hintText))
-                TextField("Fill in the Blank", text: cardTextBinding(\.fillBlankText), axis: .vertical)
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.sentences)
+                    .autocorrectionDisabled()
+
+                MultilineInputField(
+                    "Fill in the Blank",
+                    text: cardTextBinding(\.fillBlankText),
+                    language: .english
+                )
                     .lineLimit(2...4)
-                TextField("Notes", text: cardTextBinding(\.notes), axis: .vertical)
+
+                MultilineInputField(
+                    "Notes",
+                    text: cardTextBinding(\.notes),
+                    language: .english
+                )
                     .lineLimit(2...5)
-                TextField("Match Prompt", text: cardTextBinding(\.matchPrompt), axis: .vertical)
+
+                MultilineInputField(
+                    "Match Prompt",
+                    text: cardTextBinding(\.matchPrompt),
+                    language: .english
+                )
                     .lineLimit(2...4)
-                TextField("Match Answer", text: cardTextBinding(\.matchAnswer), axis: .vertical)
+
+                MultilineInputField(
+                    "Match Answer",
+                    text: cardTextBinding(\.matchAnswer),
+                    language: .english
+                )
                     .lineLimit(2...4)
-                TextField("Image Name", text: cardTextBinding(\.imageName))
+
+                TextField("General Image Name", text: cardTextBinding(\.imageName))
+                    .keyboardType(.asciiCapable)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
             }
 
             if let validationMessage = viewModel.validationMessage {
@@ -189,7 +274,9 @@ struct StandardDeckBuilderView: View {
     private func addCurrentCard() {
         viewModel.validationMessage = DeckValidationService.validateCard(
             frontText: viewModel.currentCardDraft.frontText,
+            frontImageName: viewModel.currentCardDraft.frontImageName,
             backText: viewModel.currentCardDraft.backText,
+            backImageName: viewModel.currentCardDraft.backImageName,
             deckType: .standard
         )
 
@@ -271,5 +358,49 @@ struct ReviewDeckView: View {
     NavigationStack {
         StandardDeckBuilderView()
             .environmentObject(DeckStore())
+    }
+}
+
+private struct MultilineInputField: View {
+    let placeholder: String
+    @Binding var text: String
+    let language: AppLanguage
+
+    init(_ placeholder: String, text: Binding<String>, language: AppLanguage) {
+        self.placeholder = placeholder
+        self._text = text
+        self.language = language
+    }
+
+    var body: some View {
+        TextField(placeholder, text: $text, axis: .vertical)
+            .frame(minHeight: 96, alignment: .topLeading)
+            .multilineTextAlignment(language.isRightToLeft ? .trailing : .leading)
+            .keyboardType(language.usesASCIICapableKeyboard ? .asciiCapable : .default)
+            .applyMultilineAutocapitalization(for: language)
+            .autocorrectionDisabled()
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func applyMultilineAutocapitalization(for language: AppLanguage) -> some View {
+        switch language {
+        case .english:
+            self.textInputAutocapitalization(.words)
+        case .urdu, .arabic, .mixed, .custom:
+            self.textInputAutocapitalization(.never)
+        }
+    }
+}
+
+private extension AppLanguage {
+    var usesASCIICapableKeyboard: Bool {
+        switch self {
+        case .english:
+            return true
+        case .urdu, .arabic, .mixed, .custom:
+            return false
+        }
     }
 }
