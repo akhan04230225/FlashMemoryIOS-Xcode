@@ -29,7 +29,7 @@ struct DeckDashboardView: View {
                     VStack(spacing: 12) {
                         ForEach(deckStore.decks) { deck in
                             NavigationLink {
-                                DeckDetailEditView(deck: deck)
+                                DeckDetailView(deck: deck)
                             } label: {
                                 DeckSummaryCardView(
                                     deck: deck,
@@ -81,55 +81,6 @@ struct DeckDashboardView: View {
         }
         .padding()
         .background(Color(.systemGroupedBackground))
-    }
-}
-
-private struct DeckDetailEditView: View {
-    let deck: Deck
-
-    var body: some View {
-        List {
-            Section {
-                DeckSummaryCardView(
-                    deck: deck,
-                    displayStyle: .detailed
-                )
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-            }
-
-            Section("Deck") {
-                LabeledContent("Title", value: deck.title)
-                LabeledContent("Type", value: deck.deckType.displayName)
-                LabeledContent("Cards", value: "\(deck.cardCount)")
-            }
-
-            Section("Description") {
-                Text(deck.deckDescription.isEmpty ? "No description yet." : deck.deckDescription)
-                    .foregroundStyle(deck.deckDescription.isEmpty ? .secondary : .primary)
-            }
-
-            Section("Cards") {
-                if deck.cards.isEmpty {
-                    Text("No cards in this deck yet.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(deck.cards) { card in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(card.frontText)
-                                .font(.headline)
-
-                            Text(card.backText)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-            }
-        }
-        .navigationTitle(deck.title)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
