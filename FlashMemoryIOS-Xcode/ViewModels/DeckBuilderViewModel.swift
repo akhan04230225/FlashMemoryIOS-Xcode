@@ -142,6 +142,13 @@ class DeckBuilderViewModel: ObservableObject {
         ) == nil
     }
 
+    func validateDeckForSave() -> String? {
+        DeckValidationService.validateDeckCanSave(
+            title: deckDraft.title,
+            cardCount: deckDraft.cards.count
+        )
+    }
+
     @discardableResult
     func saveDeck(using store: DeckStore) -> Bool {
         guard canSaveDeck() else {

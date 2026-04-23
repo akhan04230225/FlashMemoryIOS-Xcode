@@ -5,7 +5,7 @@ struct LineMemorizationDeckBuilderView: View {
     @EnvironmentObject var deckStore: DeckStore
     @StateObject var viewModel = DeckBuilderViewModel()
 
-    private let deckToEdit: Deck?
+    private let existingDeck: Deck?
 
     @State private var didPrepareViewModel = false
     @State private var isShowingReviewDeck = false
@@ -13,8 +13,12 @@ struct LineMemorizationDeckBuilderView: View {
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
 
-    init(deck: Deck? = nil) {
-        self.deckToEdit = deck
+    init(existingDeck: Deck? = nil) {
+        self.existingDeck = existingDeck
+    }
+
+    init(deck: Deck?) {
+        self.init(existingDeck: deck)
     }
 
     var body: some View {
@@ -176,8 +180,8 @@ struct LineMemorizationDeckBuilderView: View {
 
     private var finalActionsSection: some View {
         Section("Final Actions") {
-            Button("Review Deck") {
-                reviewDeck()
+            Button(primaryActionTitle) {
+                handlePrimaryAction()
             }
 
             Button("Cancel", role: .cancel) {
@@ -194,6 +198,10 @@ struct LineMemorizationDeckBuilderView: View {
             .mixed,
             .custom
         ]
+    }
+
+    private var primaryActionTitle: String {
+        viewModel.isEditingExistingDeck ? "Update Deck" : "Review Deck"
     }
 
     private var orderedCards: [FlashcardDraft] {
@@ -223,8 +231,8 @@ struct LineMemorizationDeckBuilderView: View {
             return
         }
 
-        if let deckToEdit {
-            viewModel.loadDeckForEditing(deckToEdit)
+        if let existingDeck {
+            viewModel.loadDeckForEditing(existingDeck)
             viewModel.updateDeckType(.lineMemorization)
         } else {
             viewModel.resetForNewDeck(deckType: .lineMemorization)
@@ -258,11 +266,30 @@ struct LineMemorizationDeckBuilderView: View {
         syncAuxiliaryFieldsFromCurrentCard()
     }
 
+    private func handlePrimaryAction() {
+        if viewModel.isEditingExistingDeck {
+            updateDeck()
+        } else {
+            reviewDeck()
+        }
+    }
+
+    private func updateDeck() {
+        viewModel.validationMessage = viewModel.validateDeckForSave()
+
+        guard viewModel.validationMessage == nil else {
+            return
+        }
+
+        guard viewModel.saveOrUpdateDeck(using: deckStore) else {
+            return
+        }
+
+        dismiss()
+    }
+
     private func reviewDeck() {
-        viewModel.validationMessage = DeckValidationService.validateDeckCanSave(
-            title: viewModel.deckDraft.title,
-            cardCount: viewModel.deckDraft.cardCount
-        )
+        viewModel.validationMessage = viewModel.validateDeckForSave()
 
         guard viewModel.validationMessage == nil else {
             return
