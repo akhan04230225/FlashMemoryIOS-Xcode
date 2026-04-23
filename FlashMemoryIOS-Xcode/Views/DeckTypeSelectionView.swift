@@ -73,17 +73,6 @@ private struct DeckTypeSelectionCard: View {
     }
 }
 
-struct MixedDeckBuilderView: View {
-    var body: some View {
-        Text("Mixed deck builder coming soon.")
-            .font(.headline)
-            .foregroundStyle(.secondary)
-            .padding()
-            .navigationTitle("Mixed Deck")
-            .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 #Preview {
     NavigationStack {
         DeckTypeSelectionView()
