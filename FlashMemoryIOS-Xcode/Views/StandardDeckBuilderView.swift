@@ -232,58 +232,6 @@ struct StandardDeckBuilderView: View {
     }
 }
 
-struct ReviewDeckView: View {
-    @EnvironmentObject private var deckStore: DeckStore
-    @Environment(\.dismiss) private var dismiss
-
-    let deckDraft: DeckDraft
-
-    var body: some View {
-        Form {
-            Section("Deck") {
-                Text(deckDraft.title)
-
-                if !deckDraft.deckDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(deckDraft.deckDescription)
-                        .foregroundStyle(.secondary)
-                }
-
-                if let category = deckDraft.category?.trimmingCharacters(in: .whitespacesAndNewlines), !category.isEmpty {
-                    Text("Category: \(category)")
-                }
-
-                Text("\(deckDraft.cardCount) cards")
-            }
-
-            Section("Languages") {
-                Text("Front: \(deckDraft.frontLanguage.displayName)")
-                Text("Back: \(deckDraft.backLanguage.displayName)")
-            }
-
-            Section("Cards") {
-                ForEach(deckDraft.cards) { cardDraft in
-                    CardPreviewRowView(
-                        card: cardDraft.toFlashcard(),
-                        displayStyle: .detailed,
-                        showsLanguages: true,
-                        showsMetadata: true,
-                        showsLineOrder: false
-                    )
-                }
-            }
-
-            Section {
-                Button("Save Deck") {
-                    deckStore.addDeck(from: deckDraft)
-                    dismiss()
-                }
-            }
-        }
-        .navigationTitle("Review Deck")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 #Preview {
     NavigationStack {
         StandardDeckBuilderView()
