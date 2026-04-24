@@ -48,40 +48,18 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private var deckDetailsSection: some View {
-        Section("Deck Details") {
-            TextField("Title", text: $viewModel.deckDraft.title)
-                .keyboardType(.asciiCapable)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-
-            LineMemorizationTextEditor(
-                "Description",
-                text: $viewModel.deckDraft.deckDescription,
-                language: .english,
-                minHeight: 110
-            )
-
-            TextField("Category", text: deckCategoryBinding)
-                .keyboardType(.asciiCapable)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-        }
+        DeckMetadataFormView(
+            title: $viewModel.deckDraft.title,
+            description: $viewModel.deckDraft.deckDescription,
+            category: deckCategoryBinding
+        )
     }
 
     private var languageSettingsSection: some View {
-        Section("Language Settings") {
-            Picker("Front Language", selection: $viewModel.deckDraft.frontLanguage) {
-                ForEach(availableLanguages, id: \.self) { language in
-                    Text(language.displayName).tag(language)
-                }
-            }
-
-            Picker("Back Language", selection: $viewModel.deckDraft.backLanguage) {
-                ForEach(availableLanguages, id: \.self) { language in
-                    Text(language.displayName).tag(language)
-                }
-            }
-        }
+        LanguageSelectionSectionView(
+            frontLanguage: $viewModel.deckDraft.frontLanguage,
+            backLanguage: $viewModel.deckDraft.backLanguage
+        )
         .onChange(of: viewModel.deckDraft.frontLanguage) { _, newLanguage in
             viewModel.currentCardDraft.frontLanguage = newLanguage
         }
@@ -92,43 +70,16 @@ struct LineMemorizationDeckBuilderView: View {
 
     private var addLineSection: some View {
         Section("Add Line / Card") {
-            LineMemorizationTextEditor(
-                "Front text",
-                text: $viewModel.currentCardDraft.frontText,
-                language: viewModel.deckDraft.frontLanguage,
-                minHeight: 120
-            )
-
-            LineMemorizationTextEditor(
-                "Back text",
-                text: $viewModel.currentCardDraft.backText,
-                language: viewModel.deckDraft.backLanguage,
-                minHeight: 120
-            )
-
-            TextField("Transliteration", text: cardTextBinding(\.transliteration))
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-
-            TextField("Source Reference", text: cardTextBinding(\.sourceReference))
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-
-            LineMemorizationTextEditor(
-                "Notes",
-                text: cardTextBinding(\.notes),
-                language: .english,
-                minHeight: 96
-            )
-
-            TextField("Line Order", text: $manualLineOrder)
-                .keyboardType(.numberPad)
-
-            LineMemorizationTextEditor(
-                "Memorization Chunks (one per line)",
-                text: $memorizationChunksText,
-                language: viewModel.deckDraft.frontLanguage,
-                minHeight: 110
+            LineMemorizationCardEntryFormView(
+                frontText: $viewModel.currentCardDraft.frontText,
+                backText: $viewModel.currentCardDraft.backText,
+                frontLanguage: viewModel.deckDraft.frontLanguage,
+                backLanguage: viewModel.deckDraft.backLanguage,
+                transliteration: cardTextBinding(\.transliteration),
+                sourceReference: cardTextBinding(\.sourceReference),
+                notes: cardTextBinding(\.notes),
+                lineOrder: $manualLineOrder,
+                memorizationChunksText: $memorizationChunksText
             )
 
             if let validationMessage = viewModel.validationMessage {
@@ -188,16 +139,6 @@ struct LineMemorizationDeckBuilderView: View {
                 dismiss()
             }
         }
-    }
-
-    private var availableLanguages: [AppLanguage] {
-        [
-            .english,
-            .urdu,
-            .arabic,
-            .mixed,
-            .custom
-        ]
     }
 
     private var primaryActionTitle: String {
@@ -312,57 +253,6 @@ struct LineMemorizationDeckBuilderView: View {
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-    }
-}
-
-private struct LineMemorizationTextEditor: View {
-    let placeholder: String
-    @Binding var text: String
-    let language: AppLanguage
-    let minHeight: CGFloat
-
-    init(
-        _ placeholder: String,
-        text: Binding<String>,
-        language: AppLanguage,
-        minHeight: CGFloat = 96
-    ) {
-        self.placeholder = placeholder
-        self._text = text
-        self.language = language
-        self.minHeight = minHeight
-    }
-
-    var body: some View {
-        TextField(placeholder, text: $text, axis: .vertical)
-            .frame(minHeight: minHeight, alignment: .topLeading)
-            .multilineTextAlignment(language.isRightToLeft ? .trailing : .leading)
-            .keyboardType(language.usesASCIICapableKeyboard ? .asciiCapable : .default)
-            .applyMultilineAutocapitalization(for: language)
-            .autocorrectionDisabled()
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func applyMultilineAutocapitalization(for language: AppLanguage) -> some View {
-        switch language {
-        case .english:
-            self.textInputAutocapitalization(.words)
-        case .urdu, .arabic, .mixed, .custom:
-            self.textInputAutocapitalization(.never)
-        }
-    }
-}
-
-private extension AppLanguage {
-    var usesASCIICapableKeyboard: Bool {
-        switch self {
-        case .english:
-            return true
-        case .urdu, .arabic, .mixed, .custom:
-            return false
-        }
     }
 }
 

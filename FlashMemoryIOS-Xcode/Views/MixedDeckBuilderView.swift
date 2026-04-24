@@ -40,40 +40,18 @@ struct MixedDeckBuilderView: View {
     }
 
     private var deckDetailsSection: some View {
-        Section("Deck Details") {
-            TextField("Title", text: $viewModel.deckDraft.title)
-                .keyboardType(.asciiCapable)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-
-            MixedMultilineInputField(
-                "Description",
-                text: $viewModel.deckDraft.deckDescription,
-                language: .english
-            )
-                .lineLimit(3...5)
-
-            TextField("Category", text: deckCategoryBinding)
-                .keyboardType(.asciiCapable)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-        }
+        DeckMetadataFormView(
+            title: $viewModel.deckDraft.title,
+            description: $viewModel.deckDraft.deckDescription,
+            category: deckCategoryBinding
+        )
     }
 
     private var languageSettingsSection: some View {
-        Section("Language Settings") {
-            Picker("Front Language", selection: $viewModel.deckDraft.frontLanguage) {
-                ForEach(availableLanguages, id: \.self) { language in
-                    Text(language.displayName).tag(language)
-                }
-            }
-
-            Picker("Back Language", selection: $viewModel.deckDraft.backLanguage) {
-                ForEach(availableLanguages, id: \.self) { language in
-                    Text(language.displayName).tag(language)
-                }
-            }
-        }
+        LanguageSelectionSectionView(
+            frontLanguage: $viewModel.deckDraft.frontLanguage,
+            backLanguage: $viewModel.deckDraft.backLanguage
+        )
         .onChange(of: viewModel.deckDraft.frontLanguage) { _, newLanguage in
             viewModel.currentCardDraft.frontLanguage = newLanguage
         }
@@ -84,74 +62,23 @@ struct MixedDeckBuilderView: View {
 
     private var addCardSection: some View {
         Section("Add Card") {
-            MixedMultilineInputField(
-                "Front text",
-                text: $viewModel.currentCardDraft.frontText,
-                language: viewModel.deckDraft.frontLanguage
+            StandardCardEntryFormView(
+                frontText: $viewModel.currentCardDraft.frontText,
+                backText: $viewModel.currentCardDraft.backText,
+                frontLanguage: viewModel.deckDraft.frontLanguage,
+                backLanguage: viewModel.deckDraft.backLanguage,
+                transliteration: cardTextBinding(\.transliteration),
+                category: cardTextBinding(\.category),
+                hintText: cardTextBinding(\.hintText),
+                fillBlankText: cardTextBinding(\.fillBlankText),
+                notes: cardTextBinding(\.notes),
+                matchPrompt: cardTextBinding(\.matchPrompt),
+                matchAnswer: cardTextBinding(\.matchAnswer),
+                imageName: cardTextBinding(\.imageName),
+                sourceReference: cardTextBinding(\.sourceReference),
+                isAdvancedFieldsExpanded: $isAdvancedFieldsExpanded,
+                showsSourceReferenceField: true
             )
-                .lineLimit(2...5)
-
-            MixedMultilineInputField(
-                "Back text",
-                text: $viewModel.currentCardDraft.backText,
-                language: viewModel.deckDraft.backLanguage
-            )
-                .lineLimit(2...5)
-
-            DisclosureGroup("Advanced Fields", isExpanded: $isAdvancedFieldsExpanded) {
-                TextField("Transliteration", text: cardTextBinding(\.transliteration))
-                    .keyboardType(.asciiCapable)
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
-
-                TextField("Category", text: cardTextBinding(\.category))
-                    .keyboardType(.asciiCapable)
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
-
-                TextField("Hint", text: cardTextBinding(\.hintText))
-                    .keyboardType(.asciiCapable)
-                    .textInputAutocapitalization(.sentences)
-                    .autocorrectionDisabled()
-
-                MixedMultilineInputField(
-                    "Fill in the Blank",
-                    text: cardTextBinding(\.fillBlankText),
-                    language: .english
-                )
-                    .lineLimit(2...4)
-
-                MixedMultilineInputField(
-                    "Notes",
-                    text: cardTextBinding(\.notes),
-                    language: .english
-                )
-                    .lineLimit(2...5)
-
-                MixedMultilineInputField(
-                    "Match Prompt",
-                    text: cardTextBinding(\.matchPrompt),
-                    language: .english
-                )
-                    .lineLimit(2...4)
-
-                MixedMultilineInputField(
-                    "Match Answer",
-                    text: cardTextBinding(\.matchAnswer),
-                    language: .english
-                )
-                    .lineLimit(2...4)
-
-                TextField("Source Reference", text: cardTextBinding(\.sourceReference))
-                    .keyboardType(.asciiCapable)
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
-
-                TextField("Image Name", text: cardTextBinding(\.imageName))
-                    .keyboardType(.asciiCapable)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            }
 
             if let validationMessage = viewModel.validationMessage {
                 Text(validationMessage)
@@ -209,16 +136,6 @@ struct MixedDeckBuilderView: View {
                 dismiss()
             }
         }
-    }
-
-    private var availableLanguages: [AppLanguage] {
-        [
-            .english,
-            .urdu,
-            .arabic,
-            .mixed,
-            .custom
-        ]
     }
 
     private var primaryActionTitle: String {
@@ -301,50 +218,6 @@ struct MixedDeckBuilderView: View {
 
         draftForReview = viewModel.deckDraft
         isShowingReviewDeck = true
-    }
-}
-
-private struct MixedMultilineInputField: View {
-    let placeholder: String
-    @Binding var text: String
-    let language: AppLanguage
-
-    init(_ placeholder: String, text: Binding<String>, language: AppLanguage) {
-        self.placeholder = placeholder
-        self._text = text
-        self.language = language
-    }
-
-    var body: some View {
-        TextField(placeholder, text: $text, axis: .vertical)
-            .frame(minHeight: 96, alignment: .topLeading)
-            .multilineTextAlignment(language.isRightToLeft ? .trailing : .leading)
-            .keyboardType(language.usesASCIICapableKeyboard ? .asciiCapable : .default)
-            .applyMixedMultilineAutocapitalization(for: language)
-            .autocorrectionDisabled()
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func applyMixedMultilineAutocapitalization(for language: AppLanguage) -> some View {
-        switch language {
-        case .english:
-            self.textInputAutocapitalization(.words)
-        case .urdu, .arabic, .mixed, .custom:
-            self.textInputAutocapitalization(.never)
-        }
-    }
-}
-
-private extension AppLanguage {
-    var usesASCIICapableKeyboard: Bool {
-        switch self {
-        case .english:
-            return true
-        case .urdu, .arabic, .mixed, .custom:
-            return false
-        }
     }
 }
 

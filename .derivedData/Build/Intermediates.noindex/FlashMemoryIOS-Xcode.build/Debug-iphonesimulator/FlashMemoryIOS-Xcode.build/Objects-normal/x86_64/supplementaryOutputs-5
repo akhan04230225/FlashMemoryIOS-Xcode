@@ -1,0 +1,30 @@
+{
+  "/Users/ahmedkhan/FlashMemoryIOS-Xcode/FlashMemoryIOS-Xcode/Utilities/AppFont.swift" : {
+    "const-values" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/AppFont.swiftconstvalues",
+    "dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/AppFont.d",
+    "diagnostics" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/AppFont.dia",
+    "object" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/AppFont.o",
+    "swift-dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/AppFont.swiftdeps"
+  },
+  "/Users/ahmedkhan/FlashMemoryIOS-Xcode/FlashMemoryIOS-Xcode/Utilities/LanguageTextSupport.swift" : {
+    "const-values" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/LanguageTextSupport.swiftconstvalues",
+    "dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/LanguageTextSupport.d",
+    "diagnostics" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/LanguageTextSupport.dia",
+    "object" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/LanguageTextSupport.o",
+    "swift-dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/LanguageTextSupport.swiftdeps"
+  },
+  "/Users/ahmedkhan/FlashMemoryIOS-Xcode/FlashMemoryIOS-Xcode/ViewModels/DeckBuilderViewModel.swift" : {
+    "const-values" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckBuilderViewModel.swiftconstvalues",
+    "dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckBuilderViewModel.d",
+    "diagnostics" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckBuilderViewModel.dia",
+    "object" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckBuilderViewModel.o",
+    "swift-dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckBuilderViewModel.swiftdeps"
+  },
+  "/Users/ahmedkhan/FlashMemoryIOS-Xcode/FlashMemoryIOS-Xcode/Views/DeckDashboardView.swift" : {
+    "const-values" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckDashboardView.swiftconstvalues",
+    "dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckDashboardView.d",
+    "diagnostics" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckDashboardView.dia",
+    "object" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckDashboardView.o",
+    "swift-dependencies" : "/Users/ahmedkhan/FlashMemoryIOS-Xcode/.derivedData/Build/Intermediates.noindex/FlashMemoryIOS-Xcode.build/Debug-iphonesimulator/FlashMemoryIOS-Xcode.build/Objects-normal/x86_64/DeckDashboardView.swiftdeps"
+  }
+}
