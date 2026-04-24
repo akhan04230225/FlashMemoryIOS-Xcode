@@ -26,7 +26,8 @@ struct CardPreviewRowView: View {
                     title: "Front",
                     text: card.frontText,
                     language: card.frontLanguage,
-                    font: .headline,
+                    size: 17,
+                    weight: .semibold,
                     color: .primary
                 )
             }
@@ -40,7 +41,8 @@ struct CardPreviewRowView: View {
                     title: "Back",
                     text: card.backText,
                     language: card.backLanguage,
-                    font: .subheadline,
+                    size: 15,
+                    weight: .regular,
                     color: .secondary
                 )
             }
@@ -123,10 +125,11 @@ struct CardPreviewRowView: View {
         title: String,
         text: String,
         language: AppLanguage,
-        font: Font,
+        size: CGFloat,
+        weight: Font.Weight,
         color: Color
     ) -> some View {
-        VStack(alignment: language.isRightToLeft ? .trailing : .leading, spacing: 4) {
+        VStack(alignment: horizontalAlignment(for: language), spacing: 4) {
             if showsLanguages {
                 Text("\(title) • \(language.displayName)")
                     .font(.caption)
@@ -135,13 +138,14 @@ struct CardPreviewRowView: View {
             }
 
             Text(text.trimmed)
-                .font(font)
+                .font(AppFont.font(for: language, size: size))
+                .fontWeight(weight)
                 .foregroundStyle(color)
-                .multilineTextAlignment(language.isRightToLeft ? .trailing : .leading)
+                .languageTextDirection(language)
                 .lineLimit(displayStyle == .compact ? 4 : nil)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: language.isRightToLeft ? .trailing : .leading)
+        .frame(maxWidth: .infinity, alignment: frameAlignment(for: language))
     }
 
     private func metadataText(_ text: String) -> some View {
