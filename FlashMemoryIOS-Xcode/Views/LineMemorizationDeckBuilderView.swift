@@ -8,7 +8,6 @@ struct LineMemorizationDeckBuilderView: View {
     private let existingDeck: Deck?
 
     @State private var didPrepareViewModel = false
-    @State private var isShowingReviewDeck = false
     @State private var draftForReview: DeckDraft?
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
@@ -39,7 +38,7 @@ struct LineMemorizationDeckBuilderView: View {
             }
         }
         .onAppear(perform: prepareViewModel)
-        .navigationDestination(isPresented: $isShowingReviewDeck) {
+        .navigationDestination(isPresented: reviewNavigationBinding) {
             if let draftForReview {
                 ReviewDeckView(deckDraft: draftForReview)
                     .environmentObject(deckStore)
@@ -145,6 +144,17 @@ struct LineMemorizationDeckBuilderView: View {
         viewModel.isEditingExistingDeck ? "Update Deck" : "Review Deck"
     }
 
+    private var reviewNavigationBinding: Binding<Bool> {
+        Binding(
+            get: { draftForReview != nil },
+            set: { isPresented in
+                if !isPresented {
+                    draftForReview = nil
+                }
+            }
+        )
+    }
+
     private var orderedCards: [FlashcardDraft] {
         viewModel.deckDraft.cards.sorted { firstCard, secondCard in
             let firstOrder = firstCard.lineOrder ?? Int.max
@@ -237,7 +247,6 @@ struct LineMemorizationDeckBuilderView: View {
         }
 
         draftForReview = viewModel.deckDraft
-        isShowingReviewDeck = true
     }
 
     private func syncAuxiliaryFieldsFromCurrentCard() {

@@ -9,7 +9,6 @@ struct MixedDeckBuilderView: View {
 
     @State private var didPrepareViewModel = false
     @State private var isAdvancedFieldsExpanded = false
-    @State private var isShowingReviewDeck = false
     @State private var draftForReview: DeckDraft?
 
     init(existingDeck: Deck? = nil) {
@@ -31,7 +30,7 @@ struct MixedDeckBuilderView: View {
         .navigationTitle(viewModel.isEditingExistingDeck ? "Edit Mixed Deck" : "Mixed Deck")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: prepareViewModel)
-        .navigationDestination(isPresented: $isShowingReviewDeck) {
+        .navigationDestination(isPresented: reviewNavigationBinding) {
             if let draftForReview {
                 ReviewDeckView(deckDraft: draftForReview)
                     .environmentObject(deckStore)
@@ -142,6 +141,17 @@ struct MixedDeckBuilderView: View {
         viewModel.isEditingExistingDeck ? "Update Deck" : "Review Deck"
     }
 
+    private var reviewNavigationBinding: Binding<Bool> {
+        Binding(
+            get: { draftForReview != nil },
+            set: { isPresented in
+                if !isPresented {
+                    draftForReview = nil
+                }
+            }
+        )
+    }
+
     private var deckCategoryBinding: Binding<String> {
         Binding(
             get: { viewModel.deckDraft.category ?? "" },
@@ -217,7 +227,6 @@ struct MixedDeckBuilderView: View {
         }
 
         draftForReview = viewModel.deckDraft
-        isShowingReviewDeck = true
     }
 }
 
