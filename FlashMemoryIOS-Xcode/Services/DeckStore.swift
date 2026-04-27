@@ -3,10 +3,25 @@ import Foundation
 
 @MainActor
 class DeckStore: ObservableObject {
-    @Published var decks: [Deck]
+    @Published var decks: [Deck] {
+        didSet {
+            saveDecks()
+        }
+    }
 
-    init(decks: [Deck]? = nil) {
-        self.decks = decks ?? Deck.sampleDecks
+    private let userDefaults: UserDefaults
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
+    private let decksStorageKey = "saved_decks"
+
+    init(decks: [Deck]? = nil, userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+
+        if let decks {
+            self.decks = decks
+        } else {
+            self.decks = Self.loadDecks(from: userDefaults) ?? Deck.sampleDecks
+        }
     }
 
     @discardableResult
@@ -119,8 +134,29 @@ class DeckStore: ObservableObject {
         }
 
         decks[deckIndex].cards.remove(at: cardIndex)
-        decks[deckIndex].updatedAt = Date()
         return true
+    }
+
+    private func saveDecks() {
+        do {
+            let data = try encoder.encode(decks)
+            userDefaults.set(data, forKey: decksStorageKey)
+        } catch {
+            print("Failed to save decks: \(error)")
+        }
+    }
+
+    private static func loadDecks(from userDefaults: UserDefaults) -> [Deck]? {
+        guard let data = userDefaults.data(forKey: "saved_decks") else {
+            return nil
+        }
+
+        do {
+            return try JSONDecoder().decode([Deck].self, from: data)
+        } catch {
+            print("Failed to load saved decks: \(error)")
+            return nil
+        }
     }
 
     private func indexForDeck(id: UUID) -> Int? {
