@@ -97,6 +97,10 @@ struct DeckDetailView: View {
                 isShowingEditDeck = true
             }
 
+            Button("Duplicate Deck") {
+                duplicateDeck()
+            }
+
             Button("Delete Deck", role: .destructive) {
                 isShowingDeleteConfirmation = true
             }
@@ -117,6 +121,11 @@ struct DeckDetailView: View {
 
     private func deleteDeck() {
         _ = deckStore.deleteDeck(id: currentDeck.id)
+        dismiss()
+    }
+
+    private func duplicateDeck() {
+        _ = deckStore.duplicateDeck(id: currentDeck.id)
         dismiss()
     }
 }

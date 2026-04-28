@@ -68,6 +68,8 @@ class DeckStore: ObservableObject {
             return nil
         }
 
+        let copiedCards = duplicateCards(originalDeck.cards)
+
         let duplicatedDeck = Deck(
             title: "\(originalDeck.title) Copy",
             deckDescription: originalDeck.deckDescription,
@@ -75,7 +77,7 @@ class DeckStore: ObservableObject {
             deckType: originalDeck.deckType,
             frontLanguage: originalDeck.frontLanguage,
             backLanguage: originalDeck.backLanguage,
-            cards: duplicateCards(originalDeck.cards)
+            cards: copiedCards
         )
 
         decks.append(duplicatedDeck)
@@ -164,8 +166,10 @@ class DeckStore: ObservableObject {
     }
 
     private func duplicateCards(_ cards: [Flashcard]) -> [Flashcard] {
-        cards.map { card in
-            Flashcard(
+        var copiedCards: [Flashcard] = []
+
+        for card in cards {
+            let copiedCard = Flashcard(
                 frontText: card.frontText,
                 backText: card.backText,
                 frontLanguage: card.frontLanguage,
@@ -184,6 +188,10 @@ class DeckStore: ObservableObject {
                 lineOrder: card.lineOrder,
                 memorizationChunks: card.memorizationChunks
             )
+
+            copiedCards.append(copiedCard)
         }
+
+        return copiedCards
     }
 }
