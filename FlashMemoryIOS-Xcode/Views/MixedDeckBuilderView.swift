@@ -24,6 +24,7 @@ struct MixedDeckBuilderView: View {
             deckDetailsSection
             languageSettingsSection
             addCardSection
+            validationMessageSection
             currentCardsSection
             finalActionsSection
         }
@@ -79,18 +80,28 @@ struct MixedDeckBuilderView: View {
                 showsSourceReferenceField: true
             )
 
-            if let validationMessage = viewModel.validationMessage {
-                Text(validationMessage)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            }
-
             Button("Add Card") {
                 addCurrentCard()
             }
 
             Button("Clear Current Card", role: .cancel) {
                 viewModel.resetCurrentCardDraft()
+                viewModel.clearValidationMessage()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var validationMessageSection: some View {
+        if let validationMessage = viewModel.validationMessage {
+            Section("Needs Attention") {
+                Label {
+                    Text(validationMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                }
             }
         }
     }
@@ -182,19 +193,7 @@ struct MixedDeckBuilderView: View {
     }
 
     private func addCurrentCard() {
-        viewModel.validationMessage = DeckValidationService.validateCard(
-            frontText: viewModel.currentCardDraft.frontText,
-            frontImageName: viewModel.currentCardDraft.frontImageName,
-            backText: viewModel.currentCardDraft.backText,
-            backImageName: viewModel.currentCardDraft.backImageName,
-            deckType: .mixed
-        )
-
-        guard viewModel.validationMessage == nil else {
-            return
-        }
-
-        viewModel.addCurrentCard()
+        _ = viewModel.addCurrentCard()
     }
 
     private func handlePrimaryAction() {
@@ -206,12 +205,6 @@ struct MixedDeckBuilderView: View {
     }
 
     private func updateDeck() {
-        viewModel.validationMessage = viewModel.validateDeckForSave()
-
-        guard viewModel.validationMessage == nil else {
-            return
-        }
-
         guard viewModel.saveOrUpdateDeck(using: deckStore) else {
             return
         }
@@ -220,9 +213,7 @@ struct MixedDeckBuilderView: View {
     }
 
     private func reviewDeck() {
-        viewModel.validationMessage = viewModel.validateDeckForSave()
-
-        guard viewModel.validationMessage == nil else {
+        guard viewModel.validateDeckForReview() else {
             return
         }
 

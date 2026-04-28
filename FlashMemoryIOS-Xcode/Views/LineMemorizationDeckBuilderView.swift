@@ -25,6 +25,7 @@ struct LineMemorizationDeckBuilderView: View {
             deckDetailsSection
             languageSettingsSection
             addLineSection
+            validationMessageSection
             currentLinesSection
             finalActionsSection
         }
@@ -81,18 +82,27 @@ struct LineMemorizationDeckBuilderView: View {
                 memorizationChunksText: $memorizationChunksText
             )
 
-            if let validationMessage = viewModel.validationMessage {
-                Text(validationMessage)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            }
-
             Button("Add Line") {
                 addCurrentLine()
             }
 
             Button("Clear Current Line", role: .cancel) {
                 clearCurrentLine()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var validationMessageSection: some View {
+        if let validationMessage = viewModel.validationMessage {
+            Section("Needs Attention") {
+                Label {
+                    Text(validationMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                }
             }
         }
     }
@@ -196,24 +206,14 @@ struct LineMemorizationDeckBuilderView: View {
     private func addCurrentLine() {
         applyAuxiliaryFieldsToCurrentCard()
 
-        viewModel.validationMessage = DeckValidationService.validateCard(
-            frontText: viewModel.currentCardDraft.frontText,
-            frontImageName: viewModel.currentCardDraft.frontImageName,
-            backText: viewModel.currentCardDraft.backText,
-            backImageName: viewModel.currentCardDraft.backImageName,
-            deckType: .lineMemorization
-        )
-
-        guard viewModel.validationMessage == nil else {
-            return
+        if viewModel.addCurrentCard() {
+            syncAuxiliaryFieldsFromCurrentCard()
         }
-
-        viewModel.addCurrentCard()
-        syncAuxiliaryFieldsFromCurrentCard()
     }
 
     private func clearCurrentLine() {
         viewModel.resetCurrentCardDraft()
+        viewModel.clearValidationMessage()
         syncAuxiliaryFieldsFromCurrentCard()
     }
 
@@ -226,12 +226,6 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private func updateDeck() {
-        viewModel.validationMessage = viewModel.validateDeckForSave()
-
-        guard viewModel.validationMessage == nil else {
-            return
-        }
-
         guard viewModel.saveOrUpdateDeck(using: deckStore) else {
             return
         }
@@ -240,9 +234,7 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private func reviewDeck() {
-        viewModel.validationMessage = viewModel.validateDeckForSave()
-
-        guard viewModel.validationMessage == nil else {
+        guard viewModel.validateDeckForReview() else {
             return
         }
 

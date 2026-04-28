@@ -52,10 +52,11 @@ class DeckBuilderViewModel: ObservableObject {
         validationMessage = nil
     }
 
-    func addCurrentCard() {
+    @discardableResult
+    func addCurrentCard() -> Bool {
         if let cardError = validateCurrentCardDraft() {
-            validationMessage = cardError
-            return
+            validationMessage = friendlyCardErrorText(for: cardError)
+            return false
         }
 
         var card = currentCardDraft
@@ -70,6 +71,7 @@ class DeckBuilderViewModel: ObservableObject {
 
         validationMessage = nil
         resetCurrentCardDraft()
+        return true
     }
 
     func removeCard(at offsets: IndexSet) {
@@ -93,6 +95,10 @@ class DeckBuilderViewModel: ObservableObject {
             backLanguage: deckDraft.backLanguage
         )
         hasUnsavedCardDraft = false
+    }
+
+    func clearValidationMessage() {
+        validationMessage = nil
     }
 
     func loadDeckForEditing(_ deck: Deck) {
@@ -122,7 +128,7 @@ class DeckBuilderViewModel: ObservableObject {
             title: deckDraft.title,
             cardCount: deckDraft.cards.count
         ) {
-            validationMessage = saveError
+            validationMessage = friendlyDeckErrorText(for: saveError, actionName: "saving")
             return nil
         }
 
@@ -150,12 +156,30 @@ class DeckBuilderViewModel: ObservableObject {
     }
 
     @discardableResult
+    func validateDeckForReview() -> Bool {
+        if let reviewError = validateDeckForSave() {
+            validationMessage = friendlyDeckErrorText(for: reviewError, actionName: "reviewing")
+            return false
+        }
+
+        validationMessage = nil
+        return true
+    }
+
+    @discardableResult
+    func validateDeckForSaving() -> Bool {
+        if let saveError = validateDeckForSave() {
+            validationMessage = friendlyDeckErrorText(for: saveError, actionName: "saving")
+            return false
+        }
+
+        validationMessage = nil
+        return true
+    }
+
+    @discardableResult
     func saveDeck(using store: DeckStore) -> Bool {
-        guard canSaveDeck() else {
-            validationMessage = DeckValidationService.validateDeckCanSave(
-                title: deckDraft.title,
-                cardCount: deckDraft.cards.count
-            )
+        guard validateDeckForSaving() else {
             return false
         }
 
@@ -167,11 +191,7 @@ class DeckBuilderViewModel: ObservableObject {
 
     @discardableResult
     func updateExistingDeck(using store: DeckStore, originalDeckId: UUID) -> Bool {
-        guard canSaveDeck() else {
-            validationMessage = DeckValidationService.validateDeckCanSave(
-                title: deckDraft.title,
-                cardCount: deckDraft.cards.count
-            )
+        guard validateDeckForSaving() else {
             return false
         }
 
@@ -183,7 +203,11 @@ class DeckBuilderViewModel: ObservableObject {
             updatedAt: Date()
         )
 
-        store.updateDeck(updatedDeck)
+        guard store.updateDeck(updatedDeck) else {
+            validationMessage = "We could not find this deck to update. Go back to your decks and try again."
+            return false
+        }
+
         validationMessage = nil
         editingDeckId = originalDeckId
         return true
@@ -209,6 +233,30 @@ class DeckBuilderViewModel: ObservableObject {
             backImageName: currentCardDraft.backImageName,
             deckType: deckDraft.deckType
         )
+    }
+
+    private func friendlyCardErrorText(for error: String) -> String {
+        if error == "Add front text or a front image." {
+            return "Add something to the front of the card before adding it."
+        }
+
+        if error == "Add back text or a back image." {
+            return "Add something to the back of the card before adding it."
+        }
+
+        return error
+    }
+
+    private func friendlyDeckErrorText(for error: String, actionName: String) -> String {
+        if error == "Deck title is required." {
+            return "Give your deck a title before \(actionName) it."
+        }
+
+        if error == "Add at least 2 cards before saving the deck." {
+            return "Add at least 2 cards before \(actionName) your deck."
+        }
+
+        return error
     }
 
     private func insertLineMemorizationCard(_ card: FlashcardDraft) {
