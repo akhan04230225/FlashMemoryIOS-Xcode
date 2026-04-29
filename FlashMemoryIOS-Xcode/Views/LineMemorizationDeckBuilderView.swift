@@ -166,11 +166,7 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private var orderedCards: [FlashcardDraft] {
-        viewModel.deckDraft.cards.sorted { firstCard, secondCard in
-            let firstOrder = firstCard.lineOrder ?? Int.max
-            let secondOrder = secondCard.lineOrder ?? Int.max
-            return firstOrder < secondOrder
-        }
+        viewModel.deckDraft.cards
     }
 
     private var deckCategoryBinding: Binding<String> {

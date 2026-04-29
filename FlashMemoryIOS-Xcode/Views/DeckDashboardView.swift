@@ -1,20 +1,30 @@
+import Combine
 import SwiftUI
 
 struct DeckDashboardView: View {
     @EnvironmentObject var deckStore: DeckStore
-    @State private var searchText = ""
-    @State private var selectedDeckTypeFilter: DeckTypeFilter = .all
+    @StateObject private var viewModel = DeckDashboardViewModel()
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                deckListSection
-                    .frame(maxHeight: .infinity)
+        VStack(spacing: 0) {
+            deckListSection
+                .frame(maxHeight: .infinity)
 
-                createDeckSection
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Decks")
+            createDeckSection
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("Decks")
+        .onAppear {
+            viewModel.updateVisibleDecks(from: deckStore.decks)
+        }
+        .onChange(of: deckStore.decks) { _, newDecks in
+            viewModel.updateVisibleDecks(from: newDecks)
+        }
+        .onChange(of: viewModel.searchText) { _, _ in
+            viewModel.updateVisibleDecks(from: deckStore.decks)
+        }
+        .onChange(of: viewModel.selectedDeckTypeFilter) { _, _ in
+            viewModel.updateVisibleDecks(from: deckStore.decks)
         }
     }
 
@@ -28,11 +38,11 @@ struct DeckDashboardView: View {
                 searchField
                 deckTypeFilterPicker
 
-                if filteredDecks.isEmpty {
+                if viewModel.visibleDecks.isEmpty {
                     emptyDeckState
                 } else {
                     VStack(spacing: 12) {
-                        ForEach(filteredDecks) { deck in
+                        ForEach(viewModel.visibleDecks) { deck in
                             NavigationLink {
                                 DeckDetailView(deck: deck)
                             } label: {
@@ -55,13 +65,13 @@ struct DeckDashboardView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
-            TextField("Search decks by title", text: $searchText)
+            TextField("Search decks by title", text: $viewModel.searchText)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
 
-            if !searchText.isEmpty {
+            if !viewModel.searchText.isEmpty {
                 Button {
-                    searchText = ""
+                    viewModel.searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
@@ -76,44 +86,12 @@ struct DeckDashboardView: View {
     }
 
     private var deckTypeFilterPicker: some View {
-        Picker("Deck Type", selection: $selectedDeckTypeFilter) {
+        Picker("Deck Type", selection: $viewModel.selectedDeckTypeFilter) {
             ForEach(DeckTypeFilter.allCases, id: \.self) { filter in
                 Text(filter.displayName).tag(filter)
             }
         }
         .pickerStyle(.segmented)
-    }
-
-    private var filteredDecks: [Deck] {
-        deckStore.decks.filter { deck in
-            matchesSelectedDeckType(deck) && matchesSearchText(deck)
-        }
-    }
-
-    private func matchesSelectedDeckType(_ deck: Deck) -> Bool {
-        switch selectedDeckTypeFilter {
-        case .all:
-            return true
-        case .standard:
-            return deck.deckType == .standard
-        case .mixed:
-            return deck.deckType == .mixed
-        case .lineMemorization:
-            return deck.deckType == .lineMemorization
-        }
-    }
-
-    private func matchesSearchText(_ deck: Deck) -> Bool {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !query.isEmpty else {
-            return true
-        }
-
-        return deck.title.range(
-            of: query,
-            options: [.caseInsensitive, .diacriticInsensitive]
-        ) != nil
     }
 
     private var emptyDeckState: some View {
@@ -168,6 +146,45 @@ struct DeckDashboardView: View {
         }
         .padding()
         .background(Color(.systemGroupedBackground))
+    }
+}
+
+@MainActor
+private final class DeckDashboardViewModel: ObservableObject {
+    @Published var searchText = ""
+    @Published var selectedDeckTypeFilter: DeckTypeFilter = .all
+    @Published private(set) var visibleDecks: [Deck] = []
+
+    func updateVisibleDecks(from decks: [Deck]) {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        visibleDecks = decks.filter { deck in
+            matchesSelectedDeckType(deck) && matchesSearchText(deck, query: query)
+        }
+    }
+
+    private func matchesSelectedDeckType(_ deck: Deck) -> Bool {
+        switch selectedDeckTypeFilter {
+        case .all:
+            return true
+        case .standard:
+            return deck.deckType == .standard
+        case .mixed:
+            return deck.deckType == .mixed
+        case .lineMemorization:
+            return deck.deckType == .lineMemorization
+        }
+    }
+
+    private func matchesSearchText(_ deck: Deck, query: String) -> Bool {
+        guard !query.isEmpty else {
+            return true
+        }
+
+        return deck.title.range(
+            of: query,
+            options: [.caseInsensitive, .diacriticInsensitive]
+        ) != nil
     }
 }
 

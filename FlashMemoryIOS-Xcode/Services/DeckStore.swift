@@ -11,7 +11,10 @@ class DeckStore: ObservableObject {
 
     private let userDefaults: UserDefaults
     private let encoder = JSONEncoder()
+    private var lastSavedDecksData: Data?
+
     private static let decksStorageKey = "saved_decks"
+    private static let decoder = JSONDecoder()
 
     init(decks: [Deck]? = nil, userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -21,6 +24,8 @@ class DeckStore: ObservableObject {
         } else {
             self.decks = Self.loadDecks(from: userDefaults) ?? Deck.sampleDecks
         }
+
+        self.lastSavedDecksData = try? encoder.encode(self.decks)
     }
 
     @discardableResult
@@ -141,7 +146,13 @@ class DeckStore: ObservableObject {
     private func saveDecks() {
         do {
             let data = try encoder.encode(decks)
+
+            guard data != lastSavedDecksData else {
+                return
+            }
+
             userDefaults.set(data, forKey: Self.decksStorageKey)
+            lastSavedDecksData = data
         } catch {
             print("Failed to save decks: \(error)")
         }
@@ -153,7 +164,7 @@ class DeckStore: ObservableObject {
         }
 
         do {
-            return try JSONDecoder().decode([Deck].self, from: data)
+            return try decoder.decode([Deck].self, from: data)
         } catch {
             print("Failed to load saved decks: \(error)")
             return nil

@@ -6,8 +6,14 @@ struct ReviewDeckView: View {
     @Environment(\.dismiss) private var dismiss
 
     let deckDraft: DeckDraft
+    private let previewDeck: Deck
 
     @State private var validationMessage: String?
+
+    init(deckDraft: DeckDraft) {
+        self.deckDraft = deckDraft
+        self.previewDeck = deckDraft.toDeck()
+    }
 
     var body: some View {
         Form {
@@ -81,10 +87,6 @@ struct ReviewDeckView: View {
                 saveDeckAndReturnToDashboard()
             }
         }
-    }
-
-    private var previewDeck: Deck {
-        deckDraft.toDeck()
     }
 
     private func reviewRow(label: String, value: String) -> some View {
