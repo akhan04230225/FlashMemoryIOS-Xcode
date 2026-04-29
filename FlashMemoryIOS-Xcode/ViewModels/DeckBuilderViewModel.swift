@@ -253,10 +253,14 @@ class DeckBuilderViewModel: ObservableObject {
         }
 
         if error == "Add at least 2 cards before saving the deck." {
-            return "Add at least 2 cards before \(actionName) your deck."
+            return "Add at least 2 \(cardItemName) before \(actionName) your deck."
         }
 
         return error
+    }
+
+    private var cardItemName: String {
+        deckDraft.deckType == .lineMemorization ? "lines" : "cards"
     }
 
     private func insertLineMemorizationCard(_ card: FlashcardDraft) {

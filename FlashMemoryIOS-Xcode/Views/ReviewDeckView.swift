@@ -7,10 +7,13 @@ struct ReviewDeckView: View {
 
     let deckDraft: DeckDraft
 
+    @State private var validationMessage: String?
+
     var body: some View {
         Form {
             deckSummarySection
             cardPreviewSection
+            validationMessageSection
             actionSection
         }
         .navigationTitle("Review Deck")
@@ -53,6 +56,21 @@ struct ReviewDeckView: View {
         }
     }
 
+    @ViewBuilder
+    private var validationMessageSection: some View {
+        if let validationMessage {
+            Section("Needs Attention") {
+                Label {
+                    Text(validationMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+    }
+
     private var actionSection: some View {
         Section("Actions") {
             Button("Edit Deck") {
@@ -80,8 +98,33 @@ struct ReviewDeckView: View {
     }
 
     private func saveDeckAndReturnToDashboard() {
+        if let saveError = DeckValidationService.validateDeckCanSave(
+            title: deckDraft.title,
+            cardCount: deckDraft.cardCount
+        ) {
+            validationMessage = friendlySaveErrorText(for: saveError)
+            return
+        }
+
         deckStore.addDeck(from: deckDraft)
+        validationMessage = nil
         popToDeckDashboard()
+    }
+
+    private func friendlySaveErrorText(for error: String) -> String {
+        if error == "Deck title is required." {
+            return "Give your deck a title before saving it."
+        }
+
+        if error == "Add at least 2 cards before saving the deck." {
+            return "Add at least 2 \(cardItemName) before saving your deck."
+        }
+
+        return error
+    }
+
+    private var cardItemName: String {
+        deckDraft.deckType == .lineMemorization ? "lines" : "cards"
     }
 
     private func popToDeckDashboard() {
