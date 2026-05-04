@@ -9,6 +9,9 @@ struct LineMemorizationDeckBuilderView: View {
 
     @State private var didPrepareViewModel = false
     @State private var draftForReview: DeckDraft?
+    @State private var selectedEntryMode: LineEntryMode = .manual
+    @State private var bulkPastedText = ""
+    @State private var bulkParseResult: BulkCardParseResult?
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
 
@@ -24,7 +27,8 @@ struct LineMemorizationDeckBuilderView: View {
         Form {
             deckDetailsSection
             languageSettingsSection
-            addLineSection
+            entryModeSection
+            lineEntrySection
             validationMessageSection
             currentLinesSection
             finalActionsSection
@@ -43,6 +47,13 @@ struct LineMemorizationDeckBuilderView: View {
             if let draftForReview {
                 ReviewDeckView(deckDraft: draftForReview)
                     .environmentObject(deckStore)
+            }
+        }
+        .navigationDestination(isPresented: bulkPreviewNavigationBinding) {
+            if let bulkParseResult {
+                BulkImportPreviewView(parseResult: bulkParseResult) { cards in
+                    addBulkLines(cards)
+                }
             }
         }
     }
@@ -68,6 +79,28 @@ struct LineMemorizationDeckBuilderView: View {
         }
     }
 
+    private var entryModeSection: some View {
+        Section("Entry Mode") {
+            Picker("Entry Mode", selection: $selectedEntryMode) {
+                ForEach(LineEntryMode.allCases) { mode in
+                    Text(mode.title)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
+    @ViewBuilder
+    private var lineEntrySection: some View {
+        switch selectedEntryMode {
+        case .manual:
+            addLineSection
+        case .bulkPaste:
+            bulkPasteSection
+        }
+    }
+
     private var addLineSection: some View {
         Section("Add Line / Card") {
             LineMemorizationCardEntryFormView(
@@ -89,6 +122,17 @@ struct LineMemorizationDeckBuilderView: View {
             Button("Clear Current Line", role: .cancel) {
                 clearCurrentLine()
             }
+        }
+    }
+
+    private var bulkPasteSection: some View {
+        BulkPasteCardEntryView(
+            pastedText: $bulkPastedText,
+            deckType: .lineMemorization,
+            frontLanguage: viewModel.deckDraft.frontLanguage,
+            backLanguage: viewModel.deckDraft.backLanguage
+        ) { result in
+            bulkParseResult = result
         }
     }
 
@@ -165,6 +209,17 @@ struct LineMemorizationDeckBuilderView: View {
         )
     }
 
+    private var bulkPreviewNavigationBinding: Binding<Bool> {
+        Binding(
+            get: { bulkParseResult != nil },
+            set: { isPresented in
+                if !isPresented {
+                    bulkParseResult = nil
+                }
+            }
+        )
+    }
+
     private var orderedCards: [FlashcardDraft] {
         viewModel.deckDraft.cards
     }
@@ -204,6 +259,14 @@ struct LineMemorizationDeckBuilderView: View {
 
         if viewModel.addCurrentCard() {
             syncAuxiliaryFieldsFromCurrentCard()
+        }
+    }
+
+    private func addBulkLines(_ cards: [Flashcard]) {
+        viewModel.addBulkParsedCards(cards)
+
+        if viewModel.validationMessage == nil {
+            bulkPastedText = ""
         }
     }
 
@@ -250,6 +313,24 @@ struct LineMemorizationDeckBuilderView: View {
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+}
+
+private enum LineEntryMode: String, CaseIterable, Identifiable {
+    case manual
+    case bulkPaste
+
+    var id: Self {
+        self
+    }
+
+    var title: String {
+        switch self {
+        case .manual:
+            return "Manual Line Entry"
+        case .bulkPaste:
+            return "Bulk Paste Lines"
+        }
     }
 }
 
