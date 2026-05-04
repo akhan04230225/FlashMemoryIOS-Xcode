@@ -9,6 +9,9 @@ struct MixedDeckBuilderView: View {
 
     @State private var didPrepareViewModel = false
     @State private var isAdvancedFieldsExpanded = false
+    @State private var selectedEntryMode: MixedEntryMode = .manual
+    @State private var bulkPastedText = ""
+    @State private var bulkParseResult: BulkCardParseResult?
     @State private var draftForReview: DeckDraft?
 
     init(existingDeck: Deck? = nil) {
@@ -23,7 +26,8 @@ struct MixedDeckBuilderView: View {
         Form {
             deckDetailsSection
             languageSettingsSection
-            addCardSection
+            entryModeSection
+            cardEntrySection
             validationMessageSection
             currentCardsSection
             finalActionsSection
@@ -35,6 +39,13 @@ struct MixedDeckBuilderView: View {
             if let draftForReview {
                 ReviewDeckView(deckDraft: draftForReview)
                     .environmentObject(deckStore)
+            }
+        }
+        .navigationDestination(isPresented: bulkPreviewNavigationBinding) {
+            if let bulkParseResult {
+                BulkImportPreviewView(parseResult: bulkParseResult) { cards in
+                    addBulkCards(cards)
+                }
             }
         }
     }
@@ -57,6 +68,28 @@ struct MixedDeckBuilderView: View {
         }
         .onChange(of: viewModel.deckDraft.backLanguage) { _, newLanguage in
             viewModel.currentCardDraft.backLanguage = newLanguage
+        }
+    }
+
+    private var entryModeSection: some View {
+        Section("Entry Mode") {
+            Picker("Entry Mode", selection: $selectedEntryMode) {
+                ForEach(MixedEntryMode.allCases) { mode in
+                    Text(mode.title)
+                        .tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
+    @ViewBuilder
+    private var cardEntrySection: some View {
+        switch selectedEntryMode {
+        case .manual:
+            addCardSection
+        case .bulkPaste:
+            bulkPasteSection
         }
     }
 
@@ -88,6 +121,17 @@ struct MixedDeckBuilderView: View {
                 viewModel.resetCurrentCardDraft()
                 viewModel.clearValidationMessage()
             }
+        }
+    }
+
+    private var bulkPasteSection: some View {
+        BulkPasteCardEntryView(
+            pastedText: $bulkPastedText,
+            deckType: .mixed,
+            frontLanguage: viewModel.deckDraft.frontLanguage,
+            backLanguage: viewModel.deckDraft.backLanguage
+        ) { result in
+            bulkParseResult = result
         }
     }
 
@@ -163,6 +207,17 @@ struct MixedDeckBuilderView: View {
         )
     }
 
+    private var bulkPreviewNavigationBinding: Binding<Bool> {
+        Binding(
+            get: { bulkParseResult != nil },
+            set: { isPresented in
+                if !isPresented {
+                    bulkParseResult = nil
+                }
+            }
+        )
+    }
+
     private var deckCategoryBinding: Binding<String> {
         Binding(
             get: { viewModel.deckDraft.category ?? "" },
@@ -196,6 +251,14 @@ struct MixedDeckBuilderView: View {
         _ = viewModel.addCurrentCard()
     }
 
+    private func addBulkCards(_ cards: [Flashcard]) {
+        viewModel.addBulkParsedCards(cards)
+
+        if viewModel.validationMessage == nil {
+            bulkPastedText = ""
+        }
+    }
+
     private func handlePrimaryAction() {
         if viewModel.isEditingExistingDeck {
             updateDeck()
@@ -218,6 +281,24 @@ struct MixedDeckBuilderView: View {
         }
 
         draftForReview = viewModel.deckDraft
+    }
+}
+
+private enum MixedEntryMode: String, CaseIterable, Identifiable {
+    case manual
+    case bulkPaste
+
+    var id: Self {
+        self
+    }
+
+    var title: String {
+        switch self {
+        case .manual:
+            return "Manual Entry"
+        case .bulkPaste:
+            return "Bulk Paste"
+        }
     }
 }
 
