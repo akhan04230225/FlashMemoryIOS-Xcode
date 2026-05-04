@@ -74,6 +74,34 @@ class DeckBuilderViewModel: ObservableObject {
         return true
     }
 
+    func addCards(_ cards: [Flashcard]) {
+        guard !cards.isEmpty else {
+            validationMessage = "No cards were selected to add."
+            return
+        }
+
+        let validCards = cards.filter { isValidCard($0) }
+
+        guard !validCards.isEmpty else {
+            validationMessage = "No valid cards were found to add."
+            return
+        }
+
+        let cardDrafts = validCards.map { FlashcardDraft(flashcard: $0) }
+        deckDraft.cards.append(contentsOf: cardDrafts)
+
+        if deckDraft.deckType == .lineMemorization {
+            sortLineMemorizationCardsByLineOrder()
+            updateLineOrderForCards()
+        }
+
+        validationMessage = nil
+    }
+
+    func addBulkParsedCards(_ cards: [Flashcard]) {
+        addCards(cards)
+    }
+
     func removeCard(at offsets: IndexSet) {
         deckDraft.cards.remove(atOffsets: offsets)
         updateLineOrderForCards()
@@ -235,6 +263,19 @@ class DeckBuilderViewModel: ObservableObject {
         )
     }
 
+    private func isValidCard(_ card: Flashcard) -> Bool {
+        let frontText = card.frontText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let backText = card.backText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return DeckValidationService.validateCard(
+            frontText: frontText,
+            frontImageName: card.frontImageName,
+            backText: backText,
+            backImageName: card.backImageName,
+            deckType: deckDraft.deckType
+        ) == nil
+    }
+
     private func friendlyCardErrorText(for error: String) -> String {
         if error == "Add front text or a front image." {
             return "Add something to the front of the card before adding it."
@@ -271,6 +312,27 @@ class DeckBuilderViewModel: ObservableObject {
 
         let insertIndex = max(0, min(lineOrder - 1, deckDraft.cards.count))
         deckDraft.cards.insert(card, at: insertIndex)
+    }
+
+    private func sortLineMemorizationCardsByLineOrder() {
+        guard deckDraft.cards.contains(where: { $0.lineOrder != nil }) else {
+            return
+        }
+
+        let indexedCards = deckDraft.cards.enumerated()
+
+        deckDraft.cards = indexedCards
+            .sorted { firstItem, secondItem in
+                let firstOrder = firstItem.element.lineOrder ?? Int.max
+                let secondOrder = secondItem.element.lineOrder ?? Int.max
+
+                if firstOrder == secondOrder {
+                    return firstItem.offset < secondItem.offset
+                }
+
+                return firstOrder < secondOrder
+            }
+            .map { $0.element }
     }
 
     private func updateLineOrderForCards() {
