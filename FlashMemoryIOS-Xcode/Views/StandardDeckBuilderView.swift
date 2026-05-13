@@ -7,6 +7,7 @@ struct StandardDeckBuilderView: View {
 
     private let existingDeck: Deck?
     private let initialDeckDraft: DeckDraft?
+    private let template: DeckTemplate?
 
     @State private var didPrepareViewModel = false
     @State private var isAdvancedCardInfoExpanded = false
@@ -15,13 +16,22 @@ struct StandardDeckBuilderView: View {
     @State private var bulkParseResult: BulkCardParseResult?
     @State private var draftForReview: DeckDraft?
 
-    init(existingDeck: Deck? = nil, initialDeckDraft: DeckDraft? = nil) {
+    init(
+        existingDeck: Deck? = nil,
+        initialDeckDraft: DeckDraft? = nil,
+        template: DeckTemplate? = nil
+    ) {
         self.existingDeck = existingDeck
         self.initialDeckDraft = initialDeckDraft
+        self.template = template
     }
 
     init(initialDeckDraft: DeckDraft) {
         self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft)
+    }
+
+    init(template: DeckTemplate?) {
+        self.init(existingDeck: nil, template: template)
     }
 
     init(deck: Deck?) {
@@ -256,6 +266,9 @@ struct StandardDeckBuilderView: View {
 
         if let existingDeck {
             viewModel.loadDeckForEditing(existingDeck)
+            viewModel.updateDeckType(.standard)
+        } else if let template {
+            viewModel.resetForTemplate(template)
             viewModel.updateDeckType(.standard)
         } else if let initialDeckDraft {
             viewModel.deckDraft = initialDeckDraft

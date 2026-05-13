@@ -42,6 +42,24 @@ class DeckBuilderViewModel: ObservableObject {
         resetCurrentCardDraft()
     }
 
+    func resetForTemplate(_ template: DeckTemplate) {
+        deckDraft = DeckDraft(
+            title: template.title,
+            deckDescription: template.description,
+            category: template.suggestedCategory,
+            deckType: template.deckType,
+            frontLanguage: template.suggestedFrontLanguage,
+            backLanguage: template.suggestedBackLanguage,
+            cards: cardsForTemplate(template.exampleCards, deckType: template.deckType)
+        )
+
+        editingDeckId = nil
+        editingDeckCreatedAt = nil
+        validationMessage = nil
+        resetCurrentCardDraft()
+        updateLineOrderForCards()
+    }
+
     func updateDeckType(_ type: DeckType) {
         deckDraft.deckType = type
 
@@ -379,6 +397,33 @@ class DeckBuilderViewModel: ObservableObject {
             let secondOrder = secondCard.lineOrder ?? Int.max
             return firstOrder < secondOrder
         }
+    }
+
+    private func cardsForTemplate(_ cards: [Flashcard], deckType: DeckType) -> [FlashcardDraft] {
+        let cardDrafts = cards.map { card in
+            FlashcardDraft(
+                id: UUID(),
+                frontText: card.frontText,
+                backText: card.backText,
+                frontLanguage: card.frontLanguage,
+                backLanguage: card.backLanguage,
+                transliteration: card.transliteration,
+                category: card.category,
+                hintText: card.hintText,
+                fillBlankText: card.fillBlankText,
+                notes: card.notes,
+                imageName: card.imageName,
+                frontImageName: card.frontImageName,
+                backImageName: card.backImageName,
+                matchPrompt: card.matchPrompt,
+                matchAnswer: card.matchAnswer,
+                sourceReference: card.sourceReference,
+                lineOrder: card.lineOrder,
+                memorizationChunks: card.memorizationChunks
+            )
+        }
+
+        return cardsForEditing(cardDrafts, deckType: deckType)
     }
 
     private func createdAtForBuiltDeck(id: UUID?) -> Date {
