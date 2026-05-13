@@ -6,28 +6,55 @@ struct DeckTypeSelectionView: View {
         .lineMemorization,
         .mixed
     ]
+    private let templates = DeckTemplateService.templates
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
                 Text("Choose a deck type")
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                ForEach(deckTypes, id: \.self) { deckType in
-                    NavigationLink {
-                        destinationView(for: deckType)
-                    } label: {
-                        DeckTypeSelectionCard(deckType: deckType)
-                    }
-                    .buttonStyle(.plain)
-                }
+                scratchSection
+                templateSection
             }
             .padding()
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("New Deck")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var scratchSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Start from Scratch")
+                .font(.headline)
+
+            ForEach(deckTypes, id: \.self) { deckType in
+                NavigationLink {
+                    destinationView(for: deckType)
+                } label: {
+                    DeckTypeSelectionCard(deckType: deckType)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var templateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Start from a Template")
+                .font(.headline)
+
+            ForEach(templates) { template in
+                NavigationLink {
+                    destinationView(for: template)
+                } label: {
+                    DeckTemplateSelectionCard(template: template)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     @ViewBuilder
@@ -40,6 +67,73 @@ struct DeckTypeSelectionView: View {
         case .mixed:
             MixedDeckBuilderView()
         }
+    }
+
+    @ViewBuilder
+    private func destinationView(for template: DeckTemplate) -> some View {
+        let deckDraft = deckDraft(from: template)
+
+        switch template.deckType {
+        case .standard:
+            StandardDeckBuilderView(initialDeckDraft: deckDraft)
+        case .lineMemorization:
+            LineMemorizationDeckBuilderView(initialDeckDraft: deckDraft)
+        case .mixed:
+            MixedDeckBuilderView(initialDeckDraft: deckDraft)
+        }
+    }
+
+    private func deckDraft(from template: DeckTemplate) -> DeckDraft {
+        DeckDraft(
+            title: template.title,
+            deckDescription: template.description,
+            category: template.suggestedCategory,
+            deckType: template.deckType,
+            frontLanguage: template.suggestedFrontLanguage,
+            backLanguage: template.suggestedBackLanguage,
+            cards: template.exampleCards
+        )
+    }
+}
+
+private struct DeckTemplateSelectionCard: View {
+    let template: DeckTemplate
+
+    var body: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(template.title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(template.description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+
+                HStack(spacing: 8) {
+                    Text(template.deckType.displayName)
+                    Text(languagePairText)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var languagePairText: String {
+        "\(template.suggestedFrontLanguage.displayName) -> \(template.suggestedBackLanguage.displayName)"
     }
 }
 

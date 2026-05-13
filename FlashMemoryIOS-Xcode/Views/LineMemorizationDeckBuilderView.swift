@@ -6,6 +6,7 @@ struct LineMemorizationDeckBuilderView: View {
     @StateObject var viewModel = DeckBuilderViewModel()
 
     private let existingDeck: Deck?
+    private let initialDeckDraft: DeckDraft?
 
     @State private var didPrepareViewModel = false
     @State private var draftForReview: DeckDraft?
@@ -15,8 +16,13 @@ struct LineMemorizationDeckBuilderView: View {
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
 
-    init(existingDeck: Deck? = nil) {
+    init(existingDeck: Deck? = nil, initialDeckDraft: DeckDraft? = nil) {
         self.existingDeck = existingDeck
+        self.initialDeckDraft = initialDeckDraft
+    }
+
+    init(initialDeckDraft: DeckDraft) {
+        self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft)
     }
 
     init(deck: Deck?) {
@@ -246,6 +252,11 @@ struct LineMemorizationDeckBuilderView: View {
         if let existingDeck {
             viewModel.loadDeckForEditing(existingDeck)
             viewModel.updateDeckType(.lineMemorization)
+        } else if let initialDeckDraft {
+            viewModel.deckDraft = initialDeckDraft
+            viewModel.updateDeckType(.lineMemorization)
+            viewModel.resetCurrentCardDraft()
+            viewModel.clearValidationMessage()
         } else {
             viewModel.resetForNewDeck(deckType: .lineMemorization)
         }
