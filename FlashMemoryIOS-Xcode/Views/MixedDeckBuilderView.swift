@@ -15,6 +15,8 @@ struct MixedDeckBuilderView: View {
     @State private var bulkPastedText = ""
     @State private var bulkParseResult: BulkCardParseResult?
     @State private var draftForReview: DeckDraft?
+    @State private var successMessage: String?
+    @FocusState private var isFrontFieldFocused: Bool
 
     init(
         existingDeck: Deck? = nil,
@@ -126,16 +128,22 @@ struct MixedDeckBuilderView: View {
                 imageName: cardTextBinding(\.imageName),
                 sourceReference: cardTextBinding(\.sourceReference),
                 isAdvancedFieldsExpanded: $isAdvancedFieldsExpanded,
+                frontFieldFocus: $isFrontFieldFocused,
                 showsSourceReferenceField: true
             )
 
             Button("Add Card") {
-                addCurrentCard()
+                addCurrentCard(shouldRefocus: false)
+            }
+
+            Button("Add Card & Continue") {
+                addCurrentCard(shouldRefocus: true)
             }
 
             Button("Clear Current Card", role: .cancel) {
                 viewModel.resetCurrentCardDraft()
                 viewModel.clearValidationMessage()
+                successMessage = nil
             }
         }
     }
@@ -161,6 +169,16 @@ struct MixedDeckBuilderView: View {
                 } icon: {
                     Image(systemName: "exclamationmark.circle.fill")
                         .foregroundStyle(.orange)
+                }
+            }
+        } else if let successMessage {
+            Section {
+                Label {
+                    Text(successMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
                 }
             }
         }
@@ -279,8 +297,17 @@ struct MixedDeckBuilderView: View {
         didPrepareViewModel = true
     }
 
-    private func addCurrentCard() {
-        _ = viewModel.addCurrentCard()
+    private func addCurrentCard(shouldRefocus: Bool) {
+        guard viewModel.addCurrentCard() else {
+            successMessage = nil
+            return
+        }
+
+        successMessage = "Card added."
+
+        if shouldRefocus {
+            focusFirstManualField()
+        }
     }
 
     private func addBulkCards(_ cards: [Flashcard]) {
@@ -288,6 +315,13 @@ struct MixedDeckBuilderView: View {
 
         if viewModel.validationMessage == nil {
             bulkPastedText = ""
+            successMessage = "Card added."
+        }
+    }
+
+    private func focusFirstManualField() {
+        DispatchQueue.main.async {
+            isFrontFieldFocused = true
         }
     }
 

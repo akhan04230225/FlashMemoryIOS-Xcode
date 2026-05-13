@@ -16,6 +16,8 @@ struct LineMemorizationDeckBuilderView: View {
     @State private var bulkParseResult: BulkCardParseResult?
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
+    @State private var successMessage: String?
+    @FocusState private var isFrontFieldFocused: Bool
 
     init(
         existingDeck: Deck? = nil,
@@ -128,11 +130,16 @@ struct LineMemorizationDeckBuilderView: View {
                 sourceReference: cardTextBinding(\.sourceReference),
                 notes: cardTextBinding(\.notes),
                 lineOrder: $manualLineOrder,
-                memorizationChunksText: $memorizationChunksText
+                memorizationChunksText: $memorizationChunksText,
+                frontFieldFocus: $isFrontFieldFocused
             )
 
             Button("Add Line") {
-                addCurrentLine()
+                addCurrentLine(shouldRefocus: false)
+            }
+
+            Button("Add Line & Continue") {
+                addCurrentLine(shouldRefocus: true)
             }
 
             Button("Clear Current Line", role: .cancel) {
@@ -162,6 +169,16 @@ struct LineMemorizationDeckBuilderView: View {
                 } icon: {
                     Image(systemName: "exclamationmark.circle.fill")
                         .foregroundStyle(.orange)
+                }
+            }
+        } else if let successMessage {
+            Section {
+                Label {
+                    Text(successMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
                 }
             }
         }
@@ -286,11 +303,18 @@ struct LineMemorizationDeckBuilderView: View {
         didPrepareViewModel = true
     }
 
-    private func addCurrentLine() {
+    private func addCurrentLine(shouldRefocus: Bool) {
         applyAuxiliaryFieldsToCurrentCard()
 
         if viewModel.addCurrentCard() {
+            successMessage = "Line added."
             syncAuxiliaryFieldsFromCurrentCard()
+
+            if shouldRefocus {
+                focusFirstManualField()
+            }
+        } else {
+            successMessage = nil
         }
     }
 
@@ -299,13 +323,21 @@ struct LineMemorizationDeckBuilderView: View {
 
         if viewModel.validationMessage == nil {
             bulkPastedText = ""
+            successMessage = "Line added."
         }
     }
 
     private func clearCurrentLine() {
         viewModel.resetCurrentCardDraft()
         viewModel.clearValidationMessage()
+        successMessage = nil
         syncAuxiliaryFieldsFromCurrentCard()
+    }
+
+    private func focusFirstManualField() {
+        DispatchQueue.main.async {
+            isFrontFieldFocused = true
+        }
     }
 
     private func handlePrimaryAction() {

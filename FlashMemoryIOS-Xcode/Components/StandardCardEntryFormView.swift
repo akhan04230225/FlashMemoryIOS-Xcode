@@ -20,6 +20,7 @@ struct StandardCardEntryFormView: View {
     @Binding var sourceReference: String
     @Binding var isAdvancedFieldsExpanded: Bool
 
+    var frontFieldFocus: FocusState<Bool>.Binding?
     var showsFrontImageFields: Bool
     var showsSourceReferenceField: Bool
 
@@ -40,6 +41,7 @@ struct StandardCardEntryFormView: View {
         backImageName: Binding<String> = .constant(""),
         sourceReference: Binding<String> = .constant(""),
         isAdvancedFieldsExpanded: Binding<Bool> = .constant(false),
+        frontFieldFocus: FocusState<Bool>.Binding? = nil,
         showsFrontImageFields: Bool = false,
         showsSourceReferenceField: Bool = false
     ) {
@@ -59,6 +61,7 @@ struct StandardCardEntryFormView: View {
         self._backImageName = backImageName
         self._sourceReference = sourceReference
         self._isAdvancedFieldsExpanded = isAdvancedFieldsExpanded
+        self.frontFieldFocus = frontFieldFocus
         self.showsFrontImageFields = showsFrontImageFields
         self.showsSourceReferenceField = showsSourceReferenceField
     }
@@ -72,7 +75,8 @@ struct StandardCardEntryFormView: View {
                 BuilderMultilineInputField(
                     "Front text",
                     text: $frontText,
-                    language: frontLanguage
+                    language: frontLanguage,
+                    focus: frontFieldFocus
                 )
                 .lineLimit(2...5)
 
@@ -167,28 +171,37 @@ private struct BuilderMultilineInputField: View {
     let placeholder: String
     @Binding var text: String
     let language: AppLanguage
+    var focus: FocusState<Bool>.Binding?
     var minHeight: CGFloat = 96
 
     init(
         _ placeholder: String,
         text: Binding<String>,
         language: AppLanguage,
+        focus: FocusState<Bool>.Binding? = nil,
         minHeight: CGFloat = 96
     ) {
         self.placeholder = placeholder
         self._text = text
         self.language = language
+        self.focus = focus
         self.minHeight = minHeight
     }
 
     var body: some View {
-        TextField(placeholder, text: $text, axis: .vertical)
+        let field = TextField(placeholder, text: $text, axis: .vertical)
             .font(AppFont.font(for: language, size: 17))
             .frame(minHeight: minHeight, alignment: .topLeading)
             .languageTextDirection(language)
             .keyboardType(language.usesASCIICapableKeyboard ? .asciiCapable : .default)
             .applyBuilderAutocapitalization(for: language)
             .autocorrectionDisabled()
+
+        if let focus {
+            field.focused(focus)
+        } else {
+            field
+        }
     }
 }
 
