@@ -180,6 +180,14 @@ struct MixedDeckBuilderView: View {
                         showsMetadata: true,
                         showsLineOrder: false
                     )
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            viewModel.duplicateCard(id: cardDraft.id)
+                        } label: {
+                            Label("Duplicate", systemImage: "plus.square.on.square")
+                        }
+                        .tint(.blue)
+                    }
                 }
                 .onDelete(perform: viewModel.removeCard)
             }

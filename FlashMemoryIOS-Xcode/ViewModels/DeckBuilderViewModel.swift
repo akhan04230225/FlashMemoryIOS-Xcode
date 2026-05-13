@@ -130,6 +130,25 @@ class DeckBuilderViewModel: ObservableObject {
         updateLineOrderForCards()
     }
 
+    func duplicateCard(id: UUID) {
+        guard let cardIndex = deckDraft.cards.firstIndex(where: { $0.id == id }) else {
+            validationMessage = "We could not find that card to duplicate."
+            return
+        }
+
+        let originalCard = deckDraft.cards[cardIndex]
+        var duplicatedCard = duplicate(of: originalCard)
+        let insertIndex = deckDraft.cards.index(after: cardIndex)
+
+        if deckDraft.deckType == .lineMemorization {
+            duplicatedCard.lineOrder = insertIndex + 1
+        }
+
+        deckDraft.cards.insert(duplicatedCard, at: insertIndex)
+        updateLineOrderForCards()
+        validationMessage = nil
+    }
+
     func moveCard(from source: IndexSet, to destination: Int) {
         deckDraft.cards.move(fromOffsets: source, toOffset: destination)
         updateLineOrderForCards()
@@ -424,6 +443,29 @@ class DeckBuilderViewModel: ObservableObject {
         }
 
         return cardsForEditing(cardDrafts, deckType: deckType)
+    }
+
+    private func duplicate(of card: FlashcardDraft) -> FlashcardDraft {
+        FlashcardDraft(
+            id: UUID(),
+            frontText: card.frontText,
+            backText: card.backText,
+            frontLanguage: card.frontLanguage,
+            backLanguage: card.backLanguage,
+            transliteration: card.transliteration,
+            category: card.category,
+            hintText: card.hintText,
+            fillBlankText: card.fillBlankText,
+            notes: card.notes,
+            imageName: card.imageName,
+            frontImageName: card.frontImageName,
+            backImageName: card.backImageName,
+            matchPrompt: card.matchPrompt,
+            matchAnswer: card.matchAnswer,
+            sourceReference: card.sourceReference,
+            lineOrder: card.lineOrder,
+            memorizationChunks: card.memorizationChunks
+        )
     }
 
     private func createdAtForBuiltDeck(id: UUID?) -> Date {

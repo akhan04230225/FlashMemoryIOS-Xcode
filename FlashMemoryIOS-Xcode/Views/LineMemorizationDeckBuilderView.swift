@@ -181,6 +181,14 @@ struct LineMemorizationDeckBuilderView: View {
                         showsMetadata: true,
                         showsLineOrder: true
                     )
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            viewModel.duplicateCard(id: cardDraft.id)
+                        } label: {
+                            Label("Duplicate", systemImage: "plus.square.on.square")
+                        }
+                        .tint(.blue)
+                    }
                 }
                 .onDelete(perform: viewModel.removeCard)
                 .onMove(perform: viewModel.moveCard)
