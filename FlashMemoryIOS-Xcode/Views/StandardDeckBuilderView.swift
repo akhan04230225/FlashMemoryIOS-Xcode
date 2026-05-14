@@ -45,6 +45,7 @@ struct StandardDeckBuilderView: View {
 
     var body: some View {
         Form {
+            DeckCreationTipsView(deckType: .standard)
             deckDetailsSection
             languageSettingsSection
             entryModeSection

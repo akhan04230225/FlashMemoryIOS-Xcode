@@ -48,6 +48,7 @@ struct LineMemorizationDeckBuilderView: View {
 
     var body: some View {
         Form {
+            DeckCreationTipsView(deckType: .lineMemorization)
             deckDetailsSection
             languageSettingsSection
             entryModeSection

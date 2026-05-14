@@ -45,6 +45,7 @@ struct MixedDeckBuilderView: View {
 
     var body: some View {
         Form {
+            DeckCreationTipsView(deckType: .mixed)
             deckDetailsSection
             languageSettingsSection
             entryModeSection
