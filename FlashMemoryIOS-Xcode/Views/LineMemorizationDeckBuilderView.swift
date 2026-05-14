@@ -369,12 +369,16 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private func addBulkLines(_ cards: [Flashcard]) {
-        viewModel.addBulkParsedCards(cards)
+        let addedLineCount = viewModel.addBulkParsedCards(cards)
 
-        if viewModel.validationMessage == nil {
+        if addedLineCount > 0 {
             bulkPastedText = ""
-            successMessage = "Line added."
+            successMessage = successMessage(for: addedLineCount, itemName: "line")
         }
+    }
+
+    private func successMessage(for count: Int, itemName: String) -> String {
+        count == 1 ? "\(itemName.capitalized) added." : "\(count) \(itemName)s added."
     }
 
     private func previewBulkLines() {

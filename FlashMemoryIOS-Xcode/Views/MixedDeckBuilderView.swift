@@ -315,12 +315,16 @@ struct MixedDeckBuilderView: View {
     }
 
     private func addBulkCards(_ cards: [Flashcard]) {
-        viewModel.addBulkParsedCards(cards)
+        let addedCardCount = viewModel.addBulkParsedCards(cards)
 
-        if viewModel.validationMessage == nil {
+        if addedCardCount > 0 {
             bulkPastedText = ""
-            successMessage = "Card added."
+            successMessage = successMessage(for: addedCardCount, itemName: "card")
         }
+    }
+
+    private func successMessage(for count: Int, itemName: String) -> String {
+        count == 1 ? "\(itemName.capitalized) added." : "\(count) \(itemName)s added."
     }
 
     private func focusFirstManualField() {

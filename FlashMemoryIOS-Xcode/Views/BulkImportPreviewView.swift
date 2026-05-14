@@ -9,6 +9,7 @@ struct BulkImportPreviewView: View {
     var body: some View {
         List {
             summarySection
+            errorMessageSection
             parsedCardsSection
             skippedLinesSection
             actionSection
@@ -20,6 +21,21 @@ struct BulkImportPreviewView: View {
     private var summarySection: some View {
         Section {
             LabeledContent("Parsed Cards", value: "\(parseResult.parsedCards.count)")
+        }
+    }
+
+    @ViewBuilder
+    private var errorMessageSection: some View {
+        if let errorMessage = parseResult.errorMessage {
+            Section("Import Notes") {
+                Label {
+                    Text(errorMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: parseResult.parsedCards.isEmpty ? "exclamationmark.circle.fill" : "info.circle.fill")
+                        .foregroundStyle(parseResult.parsedCards.isEmpty ? .orange : .blue)
+                }
+            }
         }
     }
 

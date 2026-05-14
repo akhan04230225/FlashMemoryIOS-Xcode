@@ -92,31 +92,35 @@ class DeckBuilderViewModel: ObservableObject {
         return true
     }
 
-    func addCards(_ cards: [Flashcard]) {
+    @discardableResult
+    func addCards(_ cards: [Flashcard]) -> Int {
         guard !cards.isEmpty else {
             validationMessage = "No cards were selected to add."
-            return
+            return 0
         }
 
         let validCards = cards.filter { isValidCard($0) }
 
         guard !validCards.isEmpty else {
             validationMessage = "No valid cards were found to add."
-            return
+            return 0
         }
 
         let cardDrafts = validCards.map { FlashcardDraft(flashcard: $0) }
-        deckDraft.cards.append(contentsOf: cardDrafts)
 
         if deckDraft.deckType == .lineMemorization {
-            sortLineMemorizationCardsByLineOrder()
+            deckDraft.cards.append(contentsOf: lineMemorizationCardsForAdding(cardDrafts))
             updateLineOrderForCards()
+        } else {
+            deckDraft.cards.append(contentsOf: cardDrafts)
         }
 
         validationMessage = nil
+        return cardDrafts.count
     }
 
-    func addBulkParsedCards(_ cards: [Flashcard]) {
+    @discardableResult
+    func addBulkParsedCards(_ cards: [Flashcard]) -> Int {
         addCards(cards)
     }
 
@@ -351,25 +355,12 @@ class DeckBuilderViewModel: ObservableObject {
         deckDraft.cards.insert(card, at: insertIndex)
     }
 
-    private func sortLineMemorizationCardsByLineOrder() {
-        guard deckDraft.cards.contains(where: { $0.lineOrder != nil }) else {
-            return
+    private func lineMemorizationCardsForAdding(_ cards: [FlashcardDraft]) -> [FlashcardDraft] {
+        cards.enumerated().map { index, card in
+            var updatedCard = card
+            updatedCard.lineOrder = deckDraft.cards.count + index + 1
+            return updatedCard
         }
-
-        let indexedCards = deckDraft.cards.enumerated()
-
-        deckDraft.cards = indexedCards
-            .sorted { firstItem, secondItem in
-                let firstOrder = firstItem.element.lineOrder ?? Int.max
-                let secondOrder = secondItem.element.lineOrder ?? Int.max
-
-                if firstOrder == secondOrder {
-                    return firstItem.offset < secondItem.offset
-                }
-
-                return firstOrder < secondOrder
-            }
-            .map { $0.element }
     }
 
     private func updateLineOrderForCards() {

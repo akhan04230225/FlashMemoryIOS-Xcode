@@ -76,28 +76,14 @@ struct DeckTypeSelectionView: View {
 
     @ViewBuilder
     private func destinationView(for template: DeckTemplate) -> some View {
-        let deckDraft = deckDraft(from: template)
-
         switch template.deckType {
         case .standard:
-            StandardDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
+            StandardDeckBuilderView(template: template, onSaveComplete: onDeckSaved)
         case .lineMemorization:
-            LineMemorizationDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
+            LineMemorizationDeckBuilderView(template: template, onSaveComplete: onDeckSaved)
         case .mixed:
-            MixedDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
+            MixedDeckBuilderView(template: template, onSaveComplete: onDeckSaved)
         }
-    }
-
-    private func deckDraft(from template: DeckTemplate) -> DeckDraft {
-        DeckDraft(
-            title: template.title,
-            deckDescription: template.description,
-            category: template.suggestedCategory,
-            deckType: template.deckType,
-            frontLanguage: template.suggestedFrontLanguage,
-            backLanguage: template.suggestedBackLanguage,
-            cards: template.exampleCards
-        )
     }
 }
 
