@@ -4,7 +4,7 @@ import SwiftUI
 struct DeckDashboardView: View {
     @EnvironmentObject var deckStore: DeckStore
     @StateObject private var viewModel = DeckDashboardViewModel()
-    @State private var isShowingDeckTypeSelection = false
+    @State private var isShowingDeckCreationChoice = false
     @State private var isSelectingDecks = false
     @State private var selectedDeckIDs: Set<UUID> = []
     @State private var isShowingDeleteConfirmation = false
@@ -23,8 +23,8 @@ struct DeckDashboardView: View {
                 selectionModeButton
             }
         }
-        .navigationDestination(isPresented: $isShowingDeckTypeSelection) {
-            DeckTypeSelectionView {
+        .navigationDestination(isPresented: $isShowingDeckCreationChoice) {
+            DeckCreationChoiceView {
                 returnToDashboardAfterSavingDeck()
             }
         }
@@ -219,7 +219,7 @@ struct DeckDashboardView: View {
                 .fontWeight(.semibold)
 
             Button {
-                isShowingDeckTypeSelection = true
+                isShowingDeckCreationChoice = true
             } label: {
                 Text("Start New Deck")
                     .font(.headline)
@@ -252,7 +252,7 @@ struct DeckDashboardView: View {
     }
 
     private func returnToDashboardAfterSavingDeck() {
-        isShowingDeckTypeSelection = false
+        isShowingDeckCreationChoice = false
     }
 
     private var selectionStatusText: String {
