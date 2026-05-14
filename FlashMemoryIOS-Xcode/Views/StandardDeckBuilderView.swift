@@ -8,6 +8,7 @@ struct StandardDeckBuilderView: View {
     private let existingDeck: Deck?
     private let initialDeckDraft: DeckDraft?
     private let template: DeckTemplate?
+    private let onSaveComplete: () -> Void
 
     @State private var didPrepareViewModel = false
     @State private var isAdvancedCardInfoExpanded = false
@@ -21,19 +22,21 @@ struct StandardDeckBuilderView: View {
     init(
         existingDeck: Deck? = nil,
         initialDeckDraft: DeckDraft? = nil,
-        template: DeckTemplate? = nil
+        template: DeckTemplate? = nil,
+        onSaveComplete: @escaping () -> Void = {}
     ) {
         self.existingDeck = existingDeck
         self.initialDeckDraft = initialDeckDraft
         self.template = template
+        self.onSaveComplete = onSaveComplete
     }
 
-    init(initialDeckDraft: DeckDraft) {
-        self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft)
+    init(initialDeckDraft: DeckDraft, onSaveComplete: @escaping () -> Void = {}) {
+        self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft, onSaveComplete: onSaveComplete)
     }
 
-    init(template: DeckTemplate?) {
-        self.init(existingDeck: nil, template: template)
+    init(template: DeckTemplate?, onSaveComplete: @escaping () -> Void = {}) {
+        self.init(existingDeck: nil, template: template, onSaveComplete: onSaveComplete)
     }
 
     init(deck: Deck?) {
@@ -55,7 +58,7 @@ struct StandardDeckBuilderView: View {
         .onAppear(perform: prepareViewModel)
         .navigationDestination(isPresented: reviewNavigationBinding) {
             if let draftForReview {
-                ReviewDeckView(deckDraft: draftForReview)
+                ReviewDeckView(deckDraft: draftForReview, onSaveComplete: onSaveComplete)
                     .environmentObject(deckStore)
             }
         }

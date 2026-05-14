@@ -7,6 +7,11 @@ struct DeckTypeSelectionView: View {
         .mixed
     ]
     private let templates = DeckTemplateService.templates
+    private let onDeckSaved: () -> Void
+
+    init(onDeckSaved: @escaping () -> Void = {}) {
+        self.onDeckSaved = onDeckSaved
+    }
 
     var body: some View {
         ScrollView {
@@ -61,11 +66,11 @@ struct DeckTypeSelectionView: View {
     private func destinationView(for deckType: DeckType) -> some View {
         switch deckType {
         case .standard:
-            StandardDeckBuilderView()
+            StandardDeckBuilderView(onSaveComplete: onDeckSaved)
         case .lineMemorization:
-            LineMemorizationDeckBuilderView()
+            LineMemorizationDeckBuilderView(onSaveComplete: onDeckSaved)
         case .mixed:
-            MixedDeckBuilderView()
+            MixedDeckBuilderView(onSaveComplete: onDeckSaved)
         }
     }
 
@@ -75,11 +80,11 @@ struct DeckTypeSelectionView: View {
 
         switch template.deckType {
         case .standard:
-            StandardDeckBuilderView(initialDeckDraft: deckDraft)
+            StandardDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
         case .lineMemorization:
-            LineMemorizationDeckBuilderView(initialDeckDraft: deckDraft)
+            LineMemorizationDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
         case .mixed:
-            MixedDeckBuilderView(initialDeckDraft: deckDraft)
+            MixedDeckBuilderView(initialDeckDraft: deckDraft, onSaveComplete: onDeckSaved)
         }
     }
 

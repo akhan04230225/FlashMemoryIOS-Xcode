@@ -4,6 +4,10 @@ import SwiftUI
 struct DeckDashboardView: View {
     @EnvironmentObject var deckStore: DeckStore
     @StateObject private var viewModel = DeckDashboardViewModel()
+    @State private var isShowingDeckTypeSelection = false
+    @State private var isSelectingDecks = false
+    @State private var selectedDeckIDs: Set<UUID> = []
+    @State private var isShowingDeleteConfirmation = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,11 +18,35 @@ struct DeckDashboardView: View {
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Decks")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                selectionModeButton
+            }
+        }
+        .navigationDestination(isPresented: $isShowingDeckTypeSelection) {
+            DeckTypeSelectionView {
+                returnToDashboardAfterSavingDeck()
+            }
+        }
+        .confirmationDialog(
+            "Delete selected decks?",
+            isPresented: $isShowingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(deleteConfirmationButtonTitle, role: .destructive) {
+                deleteSelectedDecks()
+            }
+
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(deleteConfirmationMessage)
+        }
         .onAppear {
             viewModel.updateVisibleDecks(from: deckStore.decks)
         }
         .onChange(of: deckStore.decks) { _, newDecks in
             viewModel.updateVisibleDecks(from: newDecks)
+            removeSelectionsForDeletedDecks(from: newDecks)
         }
         .onChange(of: viewModel.searchText) { _, _ in
             viewModel.updateVisibleDecks(from: deckStore.decks)
@@ -37,26 +65,85 @@ struct DeckDashboardView: View {
 
                 searchField
                 deckTypeFilterPicker
+                selectionStatusSection
 
                 if viewModel.visibleDecks.isEmpty {
                     emptyDeckState
                 } else {
                     VStack(spacing: 12) {
                         ForEach(viewModel.visibleDecks) { deck in
-                            NavigationLink {
-                                DeckDetailView(deck: deck)
-                            } label: {
-                                DeckSummaryCardView(
-                                    deck: deck,
-                                    showsDisclosureIndicator: true
-                                )
-                            }
-                            .buttonStyle(.plain)
+                            deckRow(for: deck)
                         }
                     }
                 }
             }
             .padding()
+        }
+    }
+
+    @ViewBuilder
+    private var selectionModeButton: some View {
+        if deckStore.decks.isEmpty {
+            EmptyView()
+        } else if isSelectingDecks {
+            Button("Done") {
+                endSelectionMode()
+            }
+        } else {
+            Button("Select") {
+                isSelectingDecks = true
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var selectionStatusSection: some View {
+        if isSelectingDecks {
+            HStack(spacing: 12) {
+                Text(selectionStatusText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Button("Clear") {
+                    selectedDeckIDs.removeAll()
+                }
+                .disabled(selectedDeckIDs.isEmpty)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    @ViewBuilder
+    private func deckRow(for deck: Deck) -> some View {
+        if isSelectingDecks {
+            Button {
+                toggleDeckSelection(deck.id)
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: selectedDeckIDs.contains(deck.id) ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundStyle(selectedDeckIDs.contains(deck.id) ? Color.accentColor : .secondary)
+
+                    DeckSummaryCardView(deck: deck)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(selectionAccessibilityLabel(for: deck))
+        } else {
+            NavigationLink {
+                DeckDetailView(deck: deck)
+            } label: {
+                DeckSummaryCardView(
+                    deck: deck,
+                    showsDisclosureIndicator: true
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -131,8 +218,8 @@ struct DeckDashboardView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            NavigationLink {
-                DeckTypeSelectionView()
+            Button {
+                isShowingDeckTypeSelection = true
             } label: {
                 Text("Start New Deck")
                     .font(.headline)
@@ -143,9 +230,96 @@ struct DeckDashboardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
+
+            if isSelectingDecks {
+                Button(role: .destructive) {
+                    isShowingDeleteConfirmation = true
+                } label: {
+                    Text(deleteSelectedButtonTitle)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(selectedDeckIDs.isEmpty ? Color.gray.opacity(0.25) : Color.red)
+                        .foregroundStyle(selectedDeckIDs.isEmpty ? Color.secondary : Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .disabled(selectedDeckIDs.isEmpty)
+            }
         }
         .padding()
         .background(Color(.systemGroupedBackground))
+    }
+
+    private func returnToDashboardAfterSavingDeck() {
+        isShowingDeckTypeSelection = false
+    }
+
+    private var selectionStatusText: String {
+        if selectedDeckIDs.isEmpty {
+            return "Select decks to delete."
+        }
+
+        return "\(selectedDeckIDs.count) selected"
+    }
+
+    private var deleteSelectedButtonTitle: String {
+        if selectedDeckIDs.count == 1 {
+            return "Delete Selected Deck"
+        }
+
+        return "Delete Selected Decks"
+    }
+
+    private var deleteConfirmationButtonTitle: String {
+        if selectedDeckIDs.count == 1 {
+            return "Delete 1 Deck"
+        }
+
+        return "Delete \(selectedDeckIDs.count) Decks"
+    }
+
+    private var deleteConfirmationMessage: String {
+        if selectedDeckIDs.count == 1 {
+            return "This deck and its cards will be permanently deleted."
+        }
+
+        return "These decks and their cards will be permanently deleted."
+    }
+
+    private func toggleDeckSelection(_ deckID: UUID) {
+        if selectedDeckIDs.contains(deckID) {
+            selectedDeckIDs.remove(deckID)
+        } else {
+            selectedDeckIDs.insert(deckID)
+        }
+    }
+
+    private func endSelectionMode() {
+        isSelectingDecks = false
+        selectedDeckIDs.removeAll()
+    }
+
+    private func deleteSelectedDecks() {
+        deckStore.deleteDecks(ids: selectedDeckIDs)
+        endSelectionMode()
+    }
+
+    private func removeSelectionsForDeletedDecks(from decks: [Deck]) {
+        let existingDeckIDs = Set(decks.map(\.id))
+        selectedDeckIDs = selectedDeckIDs.intersection(existingDeckIDs)
+
+        if decks.isEmpty {
+            endSelectionMode()
+        }
+    }
+
+    private func selectionAccessibilityLabel(for deck: Deck) -> String {
+        if selectedDeckIDs.contains(deck.id) {
+            return "\(deck.title), selected"
+        }
+
+        return "\(deck.title), not selected"
     }
 }
 

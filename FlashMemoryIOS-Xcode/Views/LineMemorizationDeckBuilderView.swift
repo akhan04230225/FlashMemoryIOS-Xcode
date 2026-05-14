@@ -8,12 +8,15 @@ struct LineMemorizationDeckBuilderView: View {
     private let existingDeck: Deck?
     private let initialDeckDraft: DeckDraft?
     private let template: DeckTemplate?
+    private let onSaveComplete: () -> Void
 
     @State private var didPrepareViewModel = false
     @State private var draftForReview: DeckDraft?
     @State private var selectedEntryMode: LineEntryMode = .manual
     @State private var bulkPastedText = ""
     @State private var bulkParseResult: BulkCardParseResult?
+    @State private var selectedSplitMethod: LineMemorizationSplitMethod = .lineBreak
+    @State private var customDelimiter = ""
     @State private var memorizationChunksText = ""
     @State private var manualLineOrder = ""
     @State private var successMessage: String?
@@ -22,19 +25,21 @@ struct LineMemorizationDeckBuilderView: View {
     init(
         existingDeck: Deck? = nil,
         initialDeckDraft: DeckDraft? = nil,
-        template: DeckTemplate? = nil
+        template: DeckTemplate? = nil,
+        onSaveComplete: @escaping () -> Void = {}
     ) {
         self.existingDeck = existingDeck
         self.initialDeckDraft = initialDeckDraft
         self.template = template
+        self.onSaveComplete = onSaveComplete
     }
 
-    init(initialDeckDraft: DeckDraft) {
-        self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft)
+    init(initialDeckDraft: DeckDraft, onSaveComplete: @escaping () -> Void = {}) {
+        self.init(existingDeck: nil, initialDeckDraft: initialDeckDraft, onSaveComplete: onSaveComplete)
     }
 
-    init(template: DeckTemplate?) {
-        self.init(existingDeck: nil, template: template)
+    init(template: DeckTemplate?, onSaveComplete: @escaping () -> Void = {}) {
+        self.init(existingDeck: nil, template: template, onSaveComplete: onSaveComplete)
     }
 
     init(deck: Deck?) {
@@ -63,7 +68,7 @@ struct LineMemorizationDeckBuilderView: View {
         .onAppear(perform: prepareViewModel)
         .navigationDestination(isPresented: reviewNavigationBinding) {
             if let draftForReview {
-                ReviewDeckView(deckDraft: draftForReview)
+                ReviewDeckView(deckDraft: draftForReview, onSaveComplete: onSaveComplete)
                     .environmentObject(deckStore)
             }
         }
@@ -149,14 +154,58 @@ struct LineMemorizationDeckBuilderView: View {
     }
 
     private var bulkPasteSection: some View {
-        BulkPasteCardEntryView(
-            pastedText: $bulkPastedText,
-            deckType: .lineMemorization,
-            frontLanguage: viewModel.deckDraft.frontLanguage,
-            backLanguage: viewModel.deckDraft.backLanguage
-        ) { result in
-            bulkParseResult = result
+        Section("Bulk Add Lines") {
+            Picker("Split Method", selection: $selectedSplitMethod) {
+                ForEach(LineMemorizationSplitMethod.allCases) { splitMethod in
+                    Text(splitMethod.displayName)
+                        .tag(splitMethod)
+                }
+            }
+
+            if selectedSplitMethod == .customDelimiter {
+                TextField("Custom delimiter", text: $customDelimiter)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+
+            TextEditor(text: $bulkPastedText)
+                .frame(minHeight: 150)
+                .font(AppFont.font(for: viewModel.deckDraft.frontLanguage, size: 16))
+                .languageTextDirection(viewModel.deckDraft.frontLanguage)
+                .overlay(alignment: .topLeading) {
+                    if bulkPastedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("Paste memorization text here")
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                            .allowsHitTesting(false)
+                    }
+                }
+
+            splitMethodHelpText
+
+            Button("Preview Lines") {
+                previewBulkLines()
+            }
+
+            Button("Clear", role: .cancel) {
+                bulkPastedText = ""
+                customDelimiter = ""
+            }
         }
+    }
+
+    private var splitMethodHelpText: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Split options:")
+                .fontWeight(.medium)
+
+            Text("Line Break: each non-empty line becomes one card.")
+            Text("Sentence: sentence endings create cards.")
+            Text("Custom Delimiter: your delimiter separates cards.")
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
 
     @ViewBuilder
@@ -325,6 +374,16 @@ struct LineMemorizationDeckBuilderView: View {
             bulkPastedText = ""
             successMessage = "Line added."
         }
+    }
+
+    private func previewBulkLines() {
+        bulkParseResult = BulkCardParserService.parseLineMemorizationCards(
+            from: bulkPastedText,
+            frontLanguage: viewModel.deckDraft.frontLanguage,
+            backLanguage: viewModel.deckDraft.backLanguage,
+            splitMethod: selectedSplitMethod,
+            customDelimiter: customDelimiter
+        )
     }
 
     private func clearCurrentLine() {

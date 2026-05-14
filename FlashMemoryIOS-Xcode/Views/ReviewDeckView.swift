@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct ReviewDeckView: View {
     @EnvironmentObject var deckStore: DeckStore
@@ -7,12 +6,14 @@ struct ReviewDeckView: View {
 
     let deckDraft: DeckDraft
     private let previewDeck: Deck
+    private let onSaveComplete: () -> Void
 
     @State private var validationMessage: String?
 
-    init(deckDraft: DeckDraft) {
+    init(deckDraft: DeckDraft, onSaveComplete: @escaping () -> Void = {}) {
         self.deckDraft = deckDraft
         self.previewDeck = deckDraft.toDeck()
+        self.onSaveComplete = onSaveComplete
     }
 
     var body: some View {
@@ -110,7 +111,7 @@ struct ReviewDeckView: View {
 
         deckStore.addDeck(from: deckDraft)
         validationMessage = nil
-        popToDeckDashboard()
+        onSaveComplete()
     }
 
     private func friendlySaveErrorText(for error: String) -> String {
@@ -127,39 +128,6 @@ struct ReviewDeckView: View {
 
     private var cardItemName: String {
         deckDraft.deckType == .lineMemorization ? "lines" : "cards"
-    }
-
-    private func popToDeckDashboard() {
-        guard let navigationController = topNavigationController() else {
-            dismiss()
-            return
-        }
-
-        navigationController.popToRootViewController(animated: true)
-    }
-
-    private func topNavigationController(
-        from controller: UIViewController? = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .rootViewController
-    ) -> UINavigationController? {
-        if let navigationController = controller as? UINavigationController {
-            return navigationController
-        }
-
-        for child in controller?.children ?? [] {
-            if let navigationController = topNavigationController(from: child) {
-                return navigationController
-            }
-        }
-
-        if let presentedViewController = controller?.presentedViewController {
-            return topNavigationController(from: presentedViewController)
-        }
-
-        return nil
     }
 }
 

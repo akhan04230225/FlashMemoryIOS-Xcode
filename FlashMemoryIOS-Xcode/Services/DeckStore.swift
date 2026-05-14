@@ -67,6 +67,20 @@ class DeckStore: ObservableObject {
     }
 
     @discardableResult
+    func deleteDecks(ids: Set<UUID>) -> Int {
+        guard !ids.isEmpty else {
+            return 0
+        }
+
+        let originalDeckCount = decks.count
+        decks.removeAll { deck in
+            ids.contains(deck.id)
+        }
+
+        return originalDeckCount - decks.count
+    }
+
+    @discardableResult
     func duplicateDeck(id: UUID) -> Deck? {
         guard let originalDeck = deck(with: id) else {
             return nil
