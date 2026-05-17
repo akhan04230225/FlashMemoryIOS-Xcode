@@ -16,6 +16,19 @@ struct DeckDashboardView: View {
 
             createDeckSection
         }
+        .onAppear {
+            let text1 = "apple book house"
+            let text2 = "استقلال مبالغہ"
+            let text3 = "الحمد لله رب العالمين"
+            let text4 = "hola como estas"
+            let text5 = "apple سیب"
+
+            print("Text1:", LanguageDetectionService.detectPrimaryLanguage(from: text1))
+            print("Text2:", LanguageDetectionService.detectPrimaryLanguage(from: text2))
+            print("Text3:", LanguageDetectionService.detectPrimaryLanguage(from: text3))
+            print("Text4:", LanguageDetectionService.detectPrimaryLanguage(from: text4))
+            print("Text5:", LanguageDetectionService.detectPrimaryLanguage(from: text5))
+        }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Decks")
         .toolbar {
