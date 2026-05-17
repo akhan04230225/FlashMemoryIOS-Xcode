@@ -134,7 +134,7 @@ struct BulkCardParserService {
     }
 
     private static func splitStandardCardLine(_ line: String) -> (front: String, back: String)? {
-        let separators = ["|", " - ", ":"]
+        let separators = ["|", "=", " - ", ":"]
 
         for separator in separators {
             guard let range = line.range(of: separator) else {
