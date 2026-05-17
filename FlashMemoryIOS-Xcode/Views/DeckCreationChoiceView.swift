@@ -14,7 +14,7 @@ struct DeckCreationChoiceView: View {
 
                 VStack(spacing: 14) {
                     NavigationLink {
-                        DeckBuilderChatView()
+                        DeckBuilderChatView(onDeckSaved: onDeckSaved)
                     } label: {
                         creationChoiceCard(
                             title: "AI Chat Builder",
@@ -91,18 +91,6 @@ struct DeckCreationChoiceView: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-struct DeckBuilderChatView: View {
-    var body: some View {
-        ContentUnavailableView(
-            "AI Chat Builder",
-            systemImage: "sparkles",
-            description: Text("The AI chat builder screen is ready to be connected.")
-        )
-        .navigationTitle("AI Chat Builder")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
