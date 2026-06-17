@@ -17,6 +17,10 @@ struct DeckTypeDetectionService {
             return .standard
         }
 
+        if hasMultipleScriptLinesWithoutSeparators(lines) {
+            return .lineMemorization
+        }
+
         if hasManyLongLinesWithoutSeparators(lines) {
             return .lineMemorization
         }
@@ -41,7 +45,9 @@ struct DeckTypeDetectionService {
                 return 0.95
             }
 
-            if mentionsLineMemorization(in: normalizedText) || hasManyLongLinesWithoutSeparators(lines) {
+            if mentionsLineMemorization(in: normalizedText)
+                || hasManyLongLinesWithoutSeparators(lines)
+                || hasMultipleScriptLinesWithoutSeparators(lines) {
                 return 0.8
             }
 
@@ -129,6 +135,19 @@ struct DeckTypeDetectionService {
         }.count
 
         return Double(longLineCount) / Double(lines.count) >= 0.6
+    }
+
+    private static func hasMultipleScriptLinesWithoutSeparators(_ lines: [String]) -> Bool {
+        guard lines.count >= 2 else {
+            return false
+        }
+
+        let scriptLineCount = lines.filter { line in
+            !looksLikeFrontBackLine(line)
+                && LanguageDetectionService.containsArabicScript(line)
+        }.count
+
+        return Double(scriptLineCount) / Double(lines.count) >= 0.6
     }
 
     private static func mentionsMixedReview(in text: String) -> Bool {

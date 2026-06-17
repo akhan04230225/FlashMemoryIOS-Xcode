@@ -100,11 +100,17 @@ struct BulkCardParserService {
         }
 
         let cards = lines.enumerated().map { index, line in
-            Flashcard(
+            let detectedLineLanguage = LanguageDetectionService.detectPrimaryLanguage(from: line)
+            let cardLanguage = languageForLine(
+                detectedLanguage: detectedLineLanguage,
+                fallbackLanguage: frontLanguage
+            )
+
+            return Flashcard(
                 frontText: line,
                 backText: "",
-                frontLanguage: frontLanguage,
-                backLanguage: backLanguage,
+                frontLanguage: cardLanguage,
+                backLanguage: cardLanguage == .mixed ? backLanguage : cardLanguage,
                 lineOrder: index + 1
             )
         }
@@ -184,6 +190,31 @@ struct BulkCardParserService {
         }
 
         return sentences
+    }
+
+    private static func languageForLine(
+        detectedLanguage: AppLanguage,
+        fallbackLanguage: AppLanguage
+    ) -> AppLanguage {
+        switch detectedLanguage {
+        case .mixed, .custom:
+            return fallbackLanguage
+        case .english,
+             .urdu,
+             .persian,
+             .arabic,
+             .spanish,
+             .french,
+             .german,
+             .italian,
+             .portuguese,
+             .turkish,
+             .hindi,
+             .chinese,
+             .korean,
+             .japanese:
+            return detectedLanguage
+        }
     }
 
     private static func errorMessage(parsedCards: [Flashcard], skippedLines: [String]) -> String? {

@@ -1,10 +1,15 @@
 import SwiftUI
 
 struct DeckDraftPreviewView: View {
+    @EnvironmentObject private var deckStore: DeckStore
+    @Environment(\.dismiss) private var dismiss
+
     let deckDraft: DeckDraft
     let intent: DeckBuildIntent
     let skippedLines: [String]
     let onDeckSaved: () -> Void
+
+    @State private var validationMessage: String?
 
     init(
         deckDraft: DeckDraft,
@@ -24,6 +29,7 @@ struct DeckDraftPreviewView: View {
             intentSection
             cardPreviewSection
             skippedLinesSection
+            validationSection
             actionSection
         }
         .navigationTitle("Draft Preview")
@@ -88,15 +94,31 @@ struct DeckDraftPreviewView: View {
 
     private var actionSection: some View {
         Section {
-            NavigationLink("Review Deck") {
-                ReviewDeckView(
-                    deckDraft: deckDraft,
-                    onSaveComplete: onDeckSaved
-                )
+            Button("Save Deck to Library") {
+                saveDeckToLibrary()
             }
 
-            NavigationLink("Edit Draft Manually") {
+            NavigationLink("Edit Manually") {
                 manualBuilderView
+            }
+
+            Button("Back") {
+                dismiss()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var validationSection: some View {
+        if let validationMessage {
+            Section("Needs Attention") {
+                Label {
+                    Text(validationMessage)
+                        .font(.footnote)
+                } icon: {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                }
             }
         }
     }
@@ -130,6 +152,36 @@ struct DeckDraftPreviewView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
+    }
+
+    private func saveDeckToLibrary() {
+        if let saveError = DeckValidationService.validateDeckCanSave(
+            title: deckDraft.title,
+            cardCount: deckDraft.cardCount
+        ) {
+            validationMessage = friendlySaveErrorText(for: saveError)
+            return
+        }
+
+        deckStore.addDeck(from: deckDraft)
+        validationMessage = nil
+        onDeckSaved()
+    }
+
+    private func friendlySaveErrorText(for error: String) -> String {
+        if error == "Deck title is required." {
+            return "Give your deck a title before saving it."
+        }
+
+        if error == "Add at least 2 cards before saving the deck." {
+            return "The assistant needs at least 2 usable \(cardItemName) before saving. You can edit manually or go back and add more text."
+        }
+
+        return error
+    }
+
+    private var cardItemName: String {
+        deckDraft.deckType == .lineMemorization ? "lines" : "cards"
     }
 }
 

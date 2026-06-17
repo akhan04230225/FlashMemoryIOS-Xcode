@@ -126,9 +126,15 @@ private extension View {
     @ViewBuilder
     func applyLineMemorizationAutocapitalization(for language: AppLanguage) -> some View {
         switch language {
-        case .english:
+        case .english,
+             .spanish,
+             .french,
+             .german,
+             .italian,
+             .portuguese,
+             .turkish:
             textInputAutocapitalization(.words)
-        case .urdu, .arabic, .mixed, .custom:
+        case .urdu, .persian, .arabic, .hindi, .chinese, .korean, .japanese, .mixed, .custom:
             textInputAutocapitalization(.never)
         }
     }
@@ -137,9 +143,15 @@ private extension View {
 private extension AppLanguage {
     var usesASCIICapableKeyboard: Bool {
         switch self {
-        case .english:
+        case .english,
+             .spanish,
+             .french,
+             .german,
+             .italian,
+             .portuguese,
+             .turkish:
             return true
-        case .urdu, .arabic, .mixed, .custom:
+        case .urdu, .persian, .arabic, .hindi, .chinese, .korean, .japanese, .mixed, .custom:
             return false
         }
     }

@@ -9,7 +9,19 @@ struct AppFont {
             return .custom("NotoNaskhArabic-Regular", size: size)
         case .urdu:
             return .custom("NotoNastaliqUrdu-Regular", size: size)
-        case .mixed, .custom:
+        case .persian,
+             .spanish,
+             .french,
+             .german,
+             .italian,
+             .portuguese,
+             .turkish,
+             .hindi,
+             .chinese,
+             .korean,
+             .japanese,
+             .mixed,
+             .custom:
             return .system(size: size)
         }
     }

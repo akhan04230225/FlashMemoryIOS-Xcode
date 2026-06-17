@@ -2,9 +2,21 @@ import SwiftUI
 
 func isRTL(_ language: AppLanguage) -> Bool {
     switch language {
-    case .arabic, .urdu:
+    case .arabic, .urdu, .persian:
         return true
-    case .english, .mixed, .custom:
+    case .english,
+         .spanish,
+         .french,
+         .german,
+         .italian,
+         .portuguese,
+         .turkish,
+         .hindi,
+         .chinese,
+         .korean,
+         .japanese,
+         .mixed,
+         .custom:
         return false
     }
 }

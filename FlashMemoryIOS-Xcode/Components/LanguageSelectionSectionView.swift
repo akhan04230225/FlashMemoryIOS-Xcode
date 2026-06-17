@@ -7,7 +7,18 @@ struct LanguageSelectionSectionView: View {
     var availableLanguages: [AppLanguage] = [
         .english,
         .urdu,
+        .persian,
         .arabic,
+        .spanish,
+        .french,
+        .german,
+        .italian,
+        .portuguese,
+        .turkish,
+        .hindi,
+        .chinese,
+        .korean,
+        .japanese,
         .mixed,
         .custom
     ]
